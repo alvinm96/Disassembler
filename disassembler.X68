@@ -4,6 +4,11 @@
 * Date       :  4/28/17
 * Description:  Main for disassembler
 *-----------------------------------------------------------
+*==================================================
+* Data Reg Constants:
+*   IO PHASE:
+*   D0: Stores trap states
+*   D1: Stores 
 *===================================================
 * Define constants prior to program execution
 *===================================================
@@ -29,8 +34,7 @@ MSG_BADADR  DC.B   'Address must be a valid hexadecimal number',0
             BSR         PROMPT_USR
             BSR         INPUT
             MOVEA.L     S_PTR, A7        * INIT STACK
-            
-            
+            SIMHALT
 *=================================================
 * Take user input - Youngmin 5/5/17
 *=================================================
@@ -73,9 +77,9 @@ INPUT
 * D3 stores hex num val, D4 is temp var
 *===================================================
 ASC_HEX_LOOP
-            CMP.B       #0,D1
+            CMP.L       #0,D1
             BLE         END_HEX
-            LSL         #4,D3
+            LSL.L       #4,D3
             SUB         #1,D1
             
 ASC_HEX
@@ -122,37 +126,37 @@ END_HEX
             CLR.L       D3
             RTS
             
-x0          ADD.B       #$0,D3          * D3 used to store HEX num
+x0          ADDI.L       #$0,D3          * D3 used to store HEX num
             JMP         ASC_HEX_LOOP
-x1          ADD.B       #$1,D3        
+x1          ADDI.L       #$1,D3        
             JMP         ASC_HEX_LOOP
-x2          ADD.B       #$2,D3        
+x2          ADDI.L       #$2,D3        
             JMP         ASC_HEX_LOOP
-x3          ADD.B       #$3,D3        
+x3          ADDI.L       #$3,D3        
             JMP         ASC_HEX_LOOP
-x4          ADD.B       #$4,D3        
+x4          ADDI.L       #$4,D3        
             JMP         ASC_HEX_LOOP
-x5          ADD.B       #$5,D3        
+x5          ADDI.L       #$5,D3        
             JMP         ASC_HEX_LOOP
-x6          ADD.B       #$6,D3        
+x6          ADDI.L       #$6,D3        
             JMP         ASC_HEX_LOOP
-x7          ADD.B       #$7,D3        
+x7          ADDI.L       #$7,D3        
             JMP         ASC_HEX_LOOP
-x8          ADD.B       #$8,D3        
+x8          ADDI.L       #$8,D3        
             JMP         ASC_HEX_LOOP
-x9          ADD.B       #$9,D3        
+x9          ADDI.L       #$9,D3        
             JMP         ASC_HEX_LOOP
-xA          ADD.B       #$A,D3        
+xA          ADDI.L       #$A,D3        
             JMP         ASC_HEX_LOOP
-xB          ADD.B       #$B,D3        
+xB          ADDI.L       #$B,D3        
             JMP         ASC_HEX_LOOP
-xC          ADD.B       #$C,D3        
+xC          ADDI.L       #$C,D3        
             JMP         ASC_HEX_LOOP
-xD          ADD.B       #$D,D3        
+xD          ADDI.L       #$D,D3        
             JMP         ASC_HEX_LOOP
-xE          ADD.B       #$E,D3        
+xE          ADDI.L       #$E,D3        
             JMP         ASC_HEX_LOOP
-xF          ADD.B       #$F,D3   
+xF          ADDI.L       #$F,D3   
             JMP         ASC_HEX_LOOP
             
 BAD_INPUT   LEA         MSG_BADADR,A1
@@ -177,9 +181,6 @@ RESET
             MOVEA.L     #$0,A2
             MOVEA.L     #$0,A3
             MOVEA.L     #$0,A4
-            MOVEA.L     #$0,A5
-            MOVEA.L     #$0,A6
-            MOVEA.L     #$0,A7
     
 *=================================================
 * Variables
