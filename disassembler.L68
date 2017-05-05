@@ -1,0 +1,251 @@
+00001000 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.15.04
+Created On: 5/5/2017 4:45:31 PM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      :  Disassembler
+00000000                             3  * Written by :  Alvin, Max, Youngmin
+00000000                             4  * Date       :  4/28/17
+00000000                             5  * Description:  Main for disassembler
+00000000                             6  *-----------------------------------------------------------
+00000000                             7  *==================================================
+00000000                             8  * Data Reg Constants:
+00000000                             9  *   
+00000000                            10  * IO PHASE:
+00000000                            11  *   D0: Stores trap states
+00000000                            12  *   D1: Stores length of string, updated after hex conversion finishes.
+00000000                            13  *   D3: Stores hex num
+00000000                            14  *   D4: Stores temporarily a byte off of the input string in A1
+00000000                            15  
+00000000                            16  *   A1: Points to the user inputed string
+Line 17 ERROR: Illegal symbol
+00000000                            17  : Stores
+00000000                            18  *===================================================
+00000000                            19  * Define constants prior to program execution
+00000000                            20  *===================================================
+00000000                            21              OPT     CRE
+00000000  =00100000                 22  S_PTR       EQU     $00100000
+00000000  =00001000                 23  START       EQU     $1000
+00000000  =0000000D                 24  CR          EQU     $0D                  * CARRIAGE RETURN
+00000000  =0000000A                 25  LF          EQU     $0A                  * LINE FEED
+00000000  =0000A000                 26  IO_PROMPT   EQU     $0000A000
+00000000                            27  
+00000000                            28  *===================================================
+00000000                            29  * Define messages
+00000000                            30  *===================================================
+00000000= 57 65 6C 63 6F 6D ...     31  MSG_INTRO   DC.B   'Welcome to disassembler',0
+00000018= 50 6C 65 61 73 65 ...     32  MSG_START   DC.B   'Please enter starting address',0
+00000036= 50 6C 65 61 73 65 ...     33  MSG_END     DC.B   'Please enter ending address',0
+00000052= 41 64 64 72 65 73 ...     34  MSG_BADADR  DC.B   'Address must be a valid hexadecimal number',0
+0000007D                            35  
+00001000                            36              ORG     START
+00001000                            37  *===================================================
+00001000                            38  * Program execution - Youngmin 5/5/17
+00001000                            39  *===================================================
+00001000  6100 0014                 40              BSR         PROMPT_USR
+00001004  6100 0024                 41              BSR         INPUT
+00001008  2E79 00100000             42              MOVEA.L     S_PTR, A7        * INIT STACK
+0000100E  6100 018E                 43              BSR         RESET
+00001012                            44              
+00001012                            45              
+00001012  FFFF FFFF                 46              SIMHALT
+00001016                            47  *=================================================
+00001016                            48  * Take user input - Youngmin 5/5/17
+00001016                            49  *=================================================
+00001016                            50  PROMPT_USR    
+00001016  43F8 0000                 51              LEA         MSG_INTRO,A1    * DISPLAY PROMPT
+0000101A  103C 000D                 52              MOVE.B      #13,D0
+0000101E  4E4F                      53              TRAP        #15
+00001020  13FC 0007 000011CC        54              MOVE.B      #7,NUM_LINE     * INIT COUNTER
+00001028  4E75                      55              RTS
+0000102A                            56  
+0000102A                            57  INPUT            
+0000102A  43F8 0018                 58              LEA         MSG_START,A1    * REQUEST STARTING ADDRESS
+0000102E  103C 000D                 59              MOVE.B      #13,D0
+00001032  4E4F                      60              TRAP        #15    
+00001034                            61              
+00001034  43F9 0000A000             62              LEA         IO_PROMPT,A1    * TAKE STARTING ADDRESS STORE IN A5
+0000103A  103C 0002                 63              MOVE.B      #2,D0           
+0000103E  4E4F                      64              TRAP        #15
+00001040  4EB9 00001072             65              JSR         ASC_HEX_LOOP
+00001046  2A41                      66              MOVE.L      D1,A5
+00001048                            67  
+00001048  43F8 0036                 68              LEA         MSG_END,A1      * REQUEST ENDING ADDRESS
+0000104C  103C 000D                 69              MOVE.B      #13,D0
+00001050  4E4F                      70              TRAP        #15
+00001052                            71              
+00001052  43F9 0000A000             72              LEA         IO_PROMPT,A1    * TAKE ENDING ADDRESS STORE IN A6
+00001058  103C 0002                 73              MOVE.B      #2,D0
+0000105C  4E4F                      74              TRAP        #15
+0000105E  4EB9 00001072             75              JSR         ASC_HEX_LOOP
+00001064  2C41                      76              MOVE.L      D1,A6
+00001066                            77              
+00001066  BDCD                      78              CMP.L       A5,A6           
+00001068  6F00 0126                 79              BLE         BAD_INPUT       * BRANCH IF ENDING ADDRESS IS LOWER THAN STARTING
+0000106C  1F3C 0000                 80              MOVE.B      #0,-(sp)        * INIT STACK
+00001070  4E75                      81              RTS
+00001072                            82              
+00001072                            83  *===================================================
+00001072                            84  * Convert ASCII to HEX - Youngmin 5/5/17
+00001072                            85  * Notes: D1 stores string, A1 stores ptr str val
+00001072                            86  * D3 stores hex num val, D4 is temp var
+00001072                            87  *===================================================
+00001072                            88  ASC_HEX_LOOP
+00001072  B2BC 00000000             89              CMP.L       #0,D1
+00001078  6F00 008E                 90              BLE         END_HEX
+0000107C  E98B                      91              LSL.L       #4,D3
+0000107E  5341                      92              SUB         #1,D1
+00001080                            93              
+00001080                            94  ASC_HEX
+00001080  1819                      95              MOVE.B      (A1)+,D4        * Copy A1 (str val) into D4 and increment A1
+00001082                            96              
+00001082  B83C 0030                 97              CMP.B       #48,D4
+00001086  6700 0088                 98              BEQ         x0
+0000108A  B83C 0031                 99              CMP.B       #49,D4
+0000108E  6700 008A                100              BEQ         x1       
+00001092  B83C 0032                101              CMP.B       #50,D4
+00001096  6700 0088                102              BEQ         x2        
+0000109A  B83C 0033                103              CMP.B       #51,D4
+0000109E  6700 0086                104              BEQ         x3        
+000010A2  B83C 0034                105              CMP.B       #52,D4
+000010A6  6700 0084                106              BEQ         x4
+000010AA  B83C 0035                107              CMP.B       #53,D4
+000010AE  6700 0082                108              BEQ         x5        
+000010B2  B83C 0036                109              CMP.B       #54,D4
+000010B6  6700 0080                110              BEQ         x6        
+000010BA  B83C 0037                111              CMP.B       #55,D4
+000010BE  6700 007E                112              BEQ         x7
+000010C2  B83C 0038                113              CMP.B       #56,D4
+000010C6  6700 007C                114              BEQ         x8        
+000010CA  B83C 0039                115              CMP.B       #57,D4
+000010CE  6700 007A                116              BEQ         x9        
+000010D2  B83C 0041                117              CMP.B       #65,D4
+000010D6  6700 007C                118              BEQ         xA
+000010DA  B83C 0042                119              CMP.B       #66,D4
+000010DE  6700 007E                120              BEQ         xB
+000010E2  B83C 0043                121              CMP.B       #67,D4
+000010E6  6700 0080                122              BEQ         xC
+000010EA  B83C 0044                123              CMP.B       #68,D4
+000010EE  6700 0082                124              BEQ         xD   
+000010F2  B83C 0045                125              CMP.B       #69,D4
+000010F6  6700 0084                126              BEQ         xE       
+000010FA  B83C 0046                127              CMP.B       #70,D4
+000010FE  6700 0086                128              BEQ         xF 
+00001102                           129     
+00001102  4EF9 00001190            130              JMP         BAD_INPUT
+00001108                           131              
+00001108                           132  END_HEX     
+00001108  2203                     133              MOVE.L      D3, D1
+0000110A  4284                     134              CLR.L       D4
+0000110C  4283                     135              CLR.L       D3
+0000110E  4E75                     136              RTS
+00001110                           137              
+00001110  0683 00000000            138  x0          ADDI.L       #$0,D3          * D3 used to store HEX num
+00001116  4EF8 1072                139              JMP         ASC_HEX_LOOP
+0000111A  5283                     140  x1          ADDI.L       #$1,D3        
+0000111C  4EF8 1072                141              JMP         ASC_HEX_LOOP
+00001120  5483                     142  x2          ADDI.L       #$2,D3        
+00001122  4EF8 1072                143              JMP         ASC_HEX_LOOP
+00001126  5683                     144  x3          ADDI.L       #$3,D3        
+00001128  4EF8 1072                145              JMP         ASC_HEX_LOOP
+0000112C  5883                     146  x4          ADDI.L       #$4,D3        
+0000112E  4EF8 1072                147              JMP         ASC_HEX_LOOP
+00001132  5A83                     148  x5          ADDI.L       #$5,D3        
+00001134  4EF8 1072                149              JMP         ASC_HEX_LOOP
+00001138  5C83                     150  x6          ADDI.L       #$6,D3        
+0000113A  4EF8 1072                151              JMP         ASC_HEX_LOOP
+0000113E  5E83                     152  x7          ADDI.L       #$7,D3        
+00001140  4EF8 1072                153              JMP         ASC_HEX_LOOP
+00001144  5083                     154  x8          ADDI.L       #$8,D3        
+00001146  4EF8 1072                155              JMP         ASC_HEX_LOOP
+0000114A  0683 00000009            156  x9          ADDI.L       #$9,D3        
+00001150  4EF8 1072                157              JMP         ASC_HEX_LOOP
+00001154  0683 0000000A            158  xA          ADDI.L       #$A,D3        
+0000115A  4EF8 1072                159              JMP         ASC_HEX_LOOP
+0000115E  0683 0000000B            160  xB          ADDI.L       #$B,D3        
+00001164  4EF8 1072                161              JMP         ASC_HEX_LOOP
+00001168  0683 0000000C            162  xC          ADDI.L       #$C,D3        
+0000116E  4EF8 1072                163              JMP         ASC_HEX_LOOP
+00001172  0683 0000000D            164  xD          ADDI.L       #$D,D3        
+00001178  4EF8 1072                165              JMP         ASC_HEX_LOOP
+0000117C  0683 0000000E            166  xE          ADDI.L       #$E,D3        
+00001182  4EF8 1072                167              JMP         ASC_HEX_LOOP
+00001186  0683 0000000F            168  xF          ADDI.L       #$F,D3   
+0000118C  4EF8 1072                169              JMP         ASC_HEX_LOOP
+00001190                           170              
+00001190  43F8 0052                171  BAD_INPUT   LEA         MSG_BADADR,A1
+00001194  103C 000D                172              MOVE.B      #13,D0
+00001198  4E4F                     173              TRAP        #15
+0000119A  4EF8 102A                174              JMP         INPUT
+0000119E                           175                     
+0000119E                           176  *===================================================
+0000119E                           177  * Reset registers
+0000119E                           178  *===================================================
+0000119E                           179  RESET
+0000119E  4280                     180              CLR.L           D0
+000011A0  4281                     181              CLR.L           D1
+000011A2  4282                     182              CLR.L           D2
+000011A4  4283                     183              CLR.L           D3
+000011A6  4284                     184              CLR.L           D4
+000011A8  4286                     185              CLR.L           D6
+000011AA  4287                     186              CLR.L           D7
+000011AC                           187  
+000011AC  207C 00000000            188              MOVEA.L     #$0,A0
+000011B2  227C 00000000            189              MOVEA.L     #$0,A1
+000011B8  247C 00000000            190              MOVEA.L     #$0,A2
+000011BE  267C 00000000            191              MOVEA.L     #$0,A3
+000011C4  287C 00000000            192              MOVEA.L     #$0,A4
+000011CA  4E75                     193              RTS
+000011CC                           194      
+000011CC                           195  *=================================================
+000011CC                           196  * Variables
+000011CC                           197  *=================================================
+000011CC                           198  NUM_LINE    DS.B   1
+000011CD                           199  START_A     DS.B   1
+000011CE                           200  END_A       DS.B   1
+000011CF                           201      
+000011CF                           202      
+000011CF                           203      END    START        ; last line of source
+
+1 error detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+ASC_HEX             1080
+ASC_HEX_LOOP        1072
+BAD_INPUT           1190
+CR                  D
+END_A               11CE
+END_HEX             1108
+INPUT               102A
+IO_PROMPT           A000
+LF                  A
+MSG_BADADR          52
+MSG_END             36
+MSG_INTRO           0
+MSG_START           18
+NUM_LINE            11CC
+PROMPT_USR          1016
+RESET               119E
+START               1000
+START_A             11CD
+S_PTR               100000
+X0                  1110
+X1                  111A
+X2                  1120
+X3                  1126
+X4                  112C
+X5                  1132
+X6                  1138
+X7                  113E
+X8                  1144
+X9                  114A
+XA                  1154
+XB                  115E
+XC                  1168
+XD                  1172
+XE                  117C
+XF                  1186

@@ -6,9 +6,16 @@
 *-----------------------------------------------------------
 *==================================================
 * Data Reg Constants:
-*   IO PHASE:
+*   
+* IO PHASE:
 *   D0: Stores trap states
-*   D1: Stores 
+*   D1: Stores length of string, updated after hex conversion finishes.
+*   D3: Stores hex num
+*   D4: Stores temporarily a byte off of the input string in A1
+
+*   A1: Points to the user inputed string
+*   A5: Stores starting memory address
+*   A6: Stores ending memory address
 *===================================================
 * Define constants prior to program execution
 *===================================================
@@ -34,6 +41,9 @@ MSG_BADADR  DC.B   'Address must be a valid hexadecimal number',0
             BSR         PROMPT_USR
             BSR         INPUT
             MOVEA.L     S_PTR, A7        * INIT STACK
+            BSR         RESET
+            
+            
             SIMHALT
 *=================================================
 * Take user input - Youngmin 5/5/17
@@ -94,7 +104,7 @@ ASC_HEX
             CMP.B       #51,D4
             BEQ         x3        
             CMP.B       #52,D4
-            BEQ         x4        
+            BEQ         x4
             CMP.B       #53,D4
             BEQ         x5        
             CMP.B       #54,D4
@@ -181,6 +191,7 @@ RESET
             MOVEA.L     #$0,A2
             MOVEA.L     #$0,A3
             MOVEA.L     #$0,A4
+            RTS
     
 *=================================================
 * Variables
