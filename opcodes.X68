@@ -11,16 +11,23 @@
 *       -testing    
 *-------------------------------------------------------
 
-GET_SIZE
-        MOVE.B  D3,D5       * move instruction for shifting
-        LSR.B   #6,D5       * move size to LSB
-        RTS
+example EQU     %1101111001100001
+shift   EQU     12
+        ORG     $1000
+        
+START
+        LEA     JMP_TABLE,A0
+        CLR.L   D0
+        MOVE.W  #example,D0
+        MOVE.B  #shift,D1
+        LSR.W   D1,D0
+        MULU    #6,D0
+        JSR     0(A0,D0)
 
 *========================================
 * Jump table
 *========================================
-JMP_TABLE
-        JMP     code0000    *Bit manipulation/MOVEP/Immediate
+JMP_TABLE   JMP     code0000    *Bit manipulation/MOVEP/Immediate
         JMP     code0001    *MOVE.B
         JMP     code0010    *MOVE.L
         JMP     code0011    *MOVE.W
@@ -92,7 +99,6 @@ code0100       LEA     FOUR_TABLE,A0 *load table
                LSR.W   #4,D5   * gets bits
                MULU    #6,D5    * form offset
                JSR     0(A0,D5) * decode next level
-
 *========================================
 * 0100 Jump table
 * MOVEM/CLR/LEA/DIVU.L/JSR/RTS
@@ -125,7 +131,7 @@ four0000       STOP        #$2700
 *========================================
 four0001       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
+               MOVE.B  #'A',(A2)+  * load A
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ; decode ea        
@@ -144,7 +150,7 @@ four0010       MOVE.B  #'C',(A2)+  * load C
 *========================================               
 four0011       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
+               MOVE.B  #'A',(A2)+  * load A
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -159,9 +165,7 @@ four0100       STOP        #$2700
 *========================================
 four0101       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
-               MOVE.B  #' ',(A2)+  * load space
-               MOVE.B  #' ',(A2)+  * load space
+               MOVE.B  #'A',(A2)+  * load A
                ;decode ea
                
 *========================================
@@ -174,7 +178,7 @@ four0110       STOP        #$2700
 *========================================
 four0111       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
+               MOVE.B  #'A',(A2)+  * load A
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -184,9 +188,9 @@ four0111       MOVE.B  #'L',(A2)+  * load L
 *========================================
 four1000       MOVE.B  #'M',(A2)+  * load M
                MOVE.B  #'O',(A2)+  * load O
-               MOVE.B  $'V',(A2)+  * load V
-               MOVE.B  $'E',(A2)+  * load E
-               MOVE.B  $'M',(A2)+  * load M
+               MOVE.B  #'V',(A2)+  * load V
+               MOVE.B  #'E',(A2)+  * load E
+               MOVE.B  #'M',(A2)+  * load M
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -196,7 +200,7 @@ four1000       MOVE.B  #'M',(A2)+  * load M
 *========================================
 four1001       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
+               MOVE.B  #'A',(A2)+  * load A
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -211,7 +215,7 @@ four1010       STOP        #$2700
 *========================================
 four1011       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
+               MOVE.B  #'A',(A2)+  * load A
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -226,9 +230,9 @@ four1100       LSL.W   #8,D3   * shift to cancel out first left byte
                BEQ     DEC_DIVU * skip to divu.l
                MOVE.B  #'M',(A2)+  * load M
                MOVE.B  #'O',(A2)+  * load O
-               MOVE.B  $'V',(A2)+  * load V
-               MOVE.B  $'E',(A2)+  * load E
-               MOVE.B  $'M',(A2)+  * load M
+               MOVE.B  #'V',(A2)+  * load V
+               MOVE.B  #'E',(A2)+  * load E
+               MOVE.B  #'M',(A2)+  * load M
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -249,7 +253,7 @@ DEC_DIVU       MOVE.B  #'D',(A2)+  * load D
 *========================================
 four1101       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
+               MOVE.B  #'A',(A2)+  * load A
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -257,7 +261,7 @@ four1101       MOVE.B  #'L',(A2)+  * load L
 *========================================
 * JSR/RTS
 *========================================
-four1110       CMPI.B  #$4E75,D3   * RTS
+four1110       CMPI.W  #$4E75,D3   * RTS
                BEQ     DEC_RTS
                MOVE.B  #'J',(A2)+  * load J
                MOVE.B  #'S',(A2)+  * load S
@@ -276,7 +280,7 @@ DEC_RTS        MOVE.B  #'R',(A2)+  * load R
 *========================================
 four1111       MOVE.B  #'L',(A2)+  * load L
                MOVE.B  #'E',(A2)+  * load E
-               MOVE.B  $'A',(A2)+  * load A
+               MOVE.B  #'A',(A2)+  * load A
                MOVE.B  #' ',(A2)+  * load space
                MOVE.B  #' ',(A2)+  * load space
                ;decode ea
@@ -326,14 +330,14 @@ code1000       MOVE.W  D3,D5    * move instruction
                LSR.W   #8,D5
                LSR.W   #5,D5
                CMPI.B  #$2,D5
-               BEQ     DEC_DIVU
+               BEQ     DEC_DIVUW
                MOVE.B  #'O',(A2)+   * load O
                MOVE.B  #'R',(A2)+   * load R
                MOVE.B  #' ',(A2)+   * load space
                MOVE.B  #' ',(A2)+   * load space
                ; decode ea
                
-DEC_DIVU       MOVE.B  #'D',(A2)+   * load D
+DEC_DIVUW      MOVE.B  #'D',(A2)+   * load D
                MOVE.B  #'I',(A2)+   * load I
                MOVE.B  #'V',(A2)+   * load V
                MOVE.B  #'U',(A2)+   * load U
@@ -415,7 +419,7 @@ ele010         MOVE.B  #'C',(A2)+   * load C
 *========================================
 * 1100- AND/MULS
 *======================================== 
-code1101       CLR     D5      * clear register
+code1100       CLR     D5      * clear register
                MOVE.W  D3,D5   * move instruction
                LSL.W   #8,D5   * shift to cancel out first left byte
                LSR.W   #8,D5   * shift to get 2 bits
@@ -617,6 +621,14 @@ MS_ROL         MOVE.B  #'R',(A2)+
 * 1111- Special/Reserved
 *========================================
 code1111
+
+GET_SIZE
+        MOVE.B  D3,D5       * move instruction for shifting
+        LSR.B   #6,D5       * move size to LSB
+        RTS
+
+    END     START
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
