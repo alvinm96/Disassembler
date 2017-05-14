@@ -9,8 +9,7 @@
 * TODO: -register shift
 *       -Error handling
 *       -code0000
-*       -testing
-*       -fix 0101    
+*       -testing  
 *-------------------------------------------------------
 example     EQU     %0100001100000000
 
@@ -319,7 +318,6 @@ four1111    MOVE.B  #'L',(A2)+  * load L
             
 *========================================
 * 0101- SUBQ
-* TODO: FIX
 *========================================
 code0101    MOVE.B  #'S',(A2)+  * load S
             MOVE.B  #'U',(A2)+  * load U
@@ -328,16 +326,29 @@ code0101    MOVE.B  #'S',(A2)+  * load S
             MOVE.B  #'.',(A2)+  * load .
             JSR     GET_SIZE    * get size
             CMPI.B  #00,D5      * byte
-            MOVE.B  #'B',(A2)+  * load B
+            BEQ     SUBQ_B
             CMPI.B  #01,D5      * word
-            MOVE.B  #'W',(A2)+  * load W
+            BEQ     SUBQ_W
             CMPI.B  #10,D5      * long
-            MOVE.B  #'L',(A2)+  * load L
+            BEQ     SUBQ_L        
             MOVE.B  #' ',(A2)+  * load space
             MOVE.B  #' ',(A2)+  * load space
             ; decode ea
+            ; err check
             STOP    #$2700
    
+SUBQ_B      MOVE.B  #'B',(A2)+  * load B
+            ; decode ea
+            STOP    #$2700
+            
+SUBQ_W      MOVE.B  #'W',(A2)+  * load W
+            ; decode ea
+            STOP    #$2700
+            
+SUBQ_L      MOVE.B  #'L',(A2)+  * load L
+            ; decode ea
+            STOP    #$2700
+            
 *========================================
 * 0110- Bcc <label>
 *========================================
