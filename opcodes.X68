@@ -13,7 +13,7 @@
 *       -code0110
 *       -testing  
 *-------------------------------------------------------
-example     EQU     %0001111000000001
+example     EQU     %0011010000000100
 
             ORG     $1000
 
@@ -651,6 +651,7 @@ GET_SIZE    MOVE.B  D3,D5       * move instruction for shifting
             RTS   
             
             END     START
+
 
 
 *~Font name~Courier New~

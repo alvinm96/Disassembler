@@ -48,7 +48,7 @@ CHECK_MODE  CMPI.B  #%000,D4    ; Dn
             CMPI.B  #%011,D4
             BEQ     MODE_ANII
             CMPI.B  #%100,D4
-            BEQ     MODE_ANII
+            BEQ     MODE_ANID
             CMPI.B  #%111,D4
             BEQ     MODE_ANII
             ; err check
@@ -143,6 +143,7 @@ MODE_ANID   LEA     DISP_DEC,A1
 MODE_IMM    LEA     DISP_PS,A1
             MOVE.B  #14,D0
             TRAP    #15
+            
             RTS
 
 *========================================
@@ -160,6 +161,7 @@ MODE_AWA    LEA     DISP_DS,A1
             MOVE.B  #14,D0
             TRAP    #15
             RTS          
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
