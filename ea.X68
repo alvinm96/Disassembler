@@ -7,36 +7,32 @@
 * A0: Jump table
 * A1: Stores the string of the decoded instruction
 *-----------------------------------------------------------                        
-EAMOVE      LEA     DISP_TAB,A1
-            MOVE.B  #14,D0
-            TRAP    #15
+EAMOVE      
             
+GET_SRC            
             MOVE.W  D3,D4       ; move instruction for src mode
-            MOVE.B  #10,D2      ; get mode
+            MOVE.B  #10,D2      ; get mode bits (3-5)
             LSL.W   D2,D4
             MOVE.B  #13,D2
             LSR.W   D2,D4 
-            
+
             MOVE.W  D3,D6       ; move instruction for src register
-            LSL.W   D2,D6       ; get register
+            LSL.W   D2,D6       ; get register bits (0-2)
             LSR.W   D2,D6
             JSR     CHECK_MODE
-
-            LEA     DISP_COM,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-            
+            RTS
+ 
+GET_DEST           
             MOVE.W  D3,D6       ; move instruction for dest register
-            LSL.W   #4,D6
+            LSL.W   #4,D6       ; get register bits (9-11)
             LSR.W   #8,D6
             LSR.W   #5,D6
-            
+
             MOVE.W  D3,D4       ; move instruction for dest mode
-            LSL.W   #7,D4
+            LSL.W   #7,D4       ; get mode bits (6-8)
             LSR.W   #8,D4
             LSR.W   #4,D4
             JSR     CHECK_MODE
-            
             RTS
             
 CHECK_MODE  CMPI.B  #%000,D4    ; Dn
@@ -161,6 +157,8 @@ MODE_AWA    LEA     DISP_DS,A1
             MOVE.B  #14,D0
             TRAP    #15
             RTS          
+
+
 
 *~Font name~Courier New~
 *~Font size~10~

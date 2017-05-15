@@ -13,7 +13,11 @@
 *       -code0110
 *       -testing  
 *-------------------------------------------------------
-example     EQU     %0011010000000100
+;example     EQU     %0011101000001001
+;example     EQU     %0100001000000101
+;example     EQU     %0100001111111001
+;example     EQU     %0100110010111000
+example     EQU     %1011001000000000
 
             ORG     $1000
 
@@ -69,8 +73,18 @@ code0001    LEA     DISP_MOVE,A1        * display MOVE
             MOVE.B  #14,D0
             TRAP    #15
     
-            JSR     EAMOVE              * decode ea
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC             * decode ea
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_DEST
             RTS
+            
 *========================================
 * 0010- MOVE.L
 *========================================            
@@ -81,8 +95,17 @@ code0010    LEA     DISP_MOVE,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC             * decode ea
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_DEST
+            RTS
             
 *========================================
 * 0011- MOVE.W
@@ -94,8 +117,17 @@ code0011    LEA     DISP_MOVE,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC             * decode ea
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_DEST
+            RTS
             
 *========================================
 * 0100- MOVEM/CLR/LEA/DIVU.L/JSR/RTS
@@ -108,30 +140,29 @@ code0100    LEA     FOUR_TABLE,A2 *load table
             LSR.W   #4,D5   * gets bits
             MULU    #6,D5    * form offset
             JSR     0(A2,D5) * decode next level
-            
-            STOP    #$2700
+            RTS
             
 *========================================
 * 0100 Jump table
 * MOVEM/CLR/LEA/DIVU.L/JSR/RTS
 *========================================
 FOUR_TABLE
-            JSR     four0000    *Not used
-            JSR     four0001    *LEA <ea>,A0
-            JSR     four0010    *CLR
-            JSR     four0011    *LEA <ea>,A1
-            JSR     four0100    *Not used
-            JSR     four0101    *LEA <ea>,A2
-            JSR     four0110    *Not used
-            JSR     four0111    *LEA <ea>,A3
-            JSR     four1000    *MOVEM- register to memory
-            JSR     four1001    *LEA <ea>,A4
-            JSR     four1010    *Not used
-            JSR     four1011    *LEA <ea>,A5
-            JSR     four1100    *MOVEM- memory to register/DIVU.L/MULS.L
-            JSR     four1101    *LEA <ea>,A6
-            JSR     four1110    *JSR/RTS
-            JSR     four1111    *LEA <ea>,A7
+            JMP     four0000    *Not used
+            JMP     four0001    *LEA <ea>,A0
+            JMP     four0010    *CLR
+            JMP     four0011    *LEA <ea>,A1
+            JMP     four0100    *Not used
+            JMP     four0101    *LEA <ea>,A2
+            JMP     four0110    *Not used
+            JMP     four0111    *LEA <ea>,A3
+            JMP     four1000    *MOVEM- register to memory
+            JMP     four1001    *LEA <ea>,A4
+            JMP     four1010    *Not used
+            JMP     four1011    *LEA <ea>,A5
+            JMP     four1100    *MOVEM- memory to register/DIVU.L/MULS.L
+            JMP     four1101    *LEA <ea>,A6
+            JMP     four1110    *JSR/RTS
+            JMP     four1111    *LEA <ea>,A7
 
 *========================================
 * Not used
@@ -144,9 +175,26 @@ four0000    STOP        #$2700
 four0001    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
-
-            JSR     EAMOVE
-            STOP    #$2700
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_0,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS
         
 *========================================
 * CLR <ea>
@@ -154,10 +202,15 @@ four0001    LEA     DISP_LEA,A1
 four0010    LEA     DISP_CLR,A1
             MOVE.B  #14,D0
             TRAP    #15
+            ; get size            
             
-            ; decode ea
-            STOP    #$2700
-   
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            RTS
+      
 *========================================
 * LEA <ea>,A1
 *========================================               
@@ -165,8 +218,25 @@ four0011    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_1,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS
    
 *========================================
 * Not used
@@ -180,8 +250,25 @@ four0101    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_2,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS
    
 *========================================
 * Not used
@@ -195,8 +282,25 @@ four0111    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_3,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS
    
 *========================================
 * MOVEM- register to memory
@@ -204,9 +308,10 @@ four0111    LEA     DISP_LEA,A1
 four1000    LEA     DISP_MOVEM,A1
             MOVE.B  #14,D0
             TRAP    #15
+            ; get size
             
-            ;decode ea
-            STOP    #$2700
+            JSR     GET_SRC
+            RTS
    
 *========================================
 * LEA <ea>,A4
@@ -215,8 +320,25 @@ four1001    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_4,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS
    
 *========================================
 * Not used
@@ -230,38 +352,61 @@ four1011    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_5,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS
    
 *========================================
 * MOVEM- memory to register/DIVU.L
 *========================================
-four1100    CLR.L   D5       * clear register
-            MOVE.W  D3,D5    * move instruction
-            LSL.W   #8,D5   * shift to cancel out first left byte
-            LSR.W   #8,D5   * shift to get 2 bits
+four1100    CLR.L   D5          * clear register
+            MOVE.W  D3,D5       * move instruction
+            LSL.W   #8,D5       * shift to cancel out first left byte
+            LSR.W   #8,D5       * shift to get 2 bits
             LSR.W   #6,D5
             CMPI.B  #01,D5
-            BEQ     DEC_DIVU * skip to divu.l
-            ; err check
-            STOP    #$2700
+            BEQ     DEC_DIVU    * skip to divu.l
             
             LEA     DISP_MOVEM,A1
             MOVE.B  #14,D0
             TRAP    #15
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            JSR     GET_SRC
+            RTS
    
 DEC_DIVU    LEA     DISP_DIVU,A1
             MOVE.B  #14,D0
             TRAP    #15
+            
             LEA     DISP_LONG,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            RTS
             
 *========================================
 * LEA <ea>,A6
@@ -270,28 +415,47 @@ four1101    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ;decode ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_6,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS
    
 *========================================
 * JSR/RTS
 *========================================
 four1110    CMPI.W  #$4E75,D3   * RTS
             BEQ     DEC_RTS
-            ; err check
-            STOP    #$2700
             
             LEA     DISP_JSR,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            ; find ea
-            STOP    #$2700
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            RTS
 
 DEC_RTS     LEA     DISP_RTS,A1
             MOVE.B  #14,D0
             TRAP    #15
-            STOP    #$2700
+            RTS
             
 *========================================
 * LEA <ea>,A7
@@ -299,8 +463,26 @@ DEC_RTS     LEA     DISP_RTS,A1
 four1111    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ;decode ea
-            STOP    #$2700   
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     DISP_AN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            LEA     REG_7,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            RTS  
             
 *========================================
 * 0101- SUBQ
@@ -316,27 +498,41 @@ code0101    LEA     DISP_SUBQ,A1
             CMPI.B  #10,D5      * long
             BEQ     SUBQ_L        
             
-            ; decode ea
             ; err check
             STOP    #$2700
    
 SUBQ_B      LEA     DISP_BYTE,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700
             
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15            
+            
+            JSR     GET_SRC
+            RTS
+           
 SUBQ_W      LEA     DISP_WORD,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15            
+            
+            JSR     GET_SRC
+            RTS
             
 SUBQ_L      LEA     DISP_LONG,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15            
+            
+            JSR     GET_SRC
+            RTS
             
 *========================================
 * 0110- Bcc <label>
@@ -368,8 +564,14 @@ code1000    CLR     D5       * clear register
             LEA     DISP_OR,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC
+            RTS
+            ;get register
    
 DEC_DIVUW   LEA     DISP_DIVU,A1
             MOVE.B  #14,D0
@@ -377,9 +579,15 @@ DEC_DIVUW   LEA     DISP_DIVU,A1
             LEA     DISP_WORD,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700                
-           
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+                        
+            ; get register
+            
+            JSR     GET_SRC
+            RTS           
 *========================================
 * 1001- SUB
 *========================================
@@ -396,51 +604,67 @@ code1010    STOP        #$2700
 *========================================
 * 1011- CMP
 *========================================
-code1011    LEA     ELE_TABLE,A0 *load table
-            CLR.L   D5
+code1011    CLR.L   D5
             MOVE.W  D3,D5     * move instruction
             LSL.W   #7,D5     * isolate bits 6-8
             LSR.W   #8,D5
             LSR.W   #5,D5
+            
             LEA     DISP_CLR,A1
             MOVE.B  #14,D0
             TRAP    #15
             
-            CMPI.B  #$0,D5
+            CMPI.B  #$0,D5    * get opmode
             BEQ     ele000
             CMPI.B  #$1,D5
             BEQ     ele001
             CMPI.B  #$2,D5
             BEQ     ele010
+            
             ; not supported, go to err here
             STOP    #$2700 
             
 *========================================
-* 1011 Jump table
-* CMP
+* 1011 CMP opmodes
 *========================================              
-ELE_TABLE     
-            JSR    ele000
-            JSR    ele001
-            JSR    ele010
-
 ele000      LEA     DISP_BYTE,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+
+            ; get register
+            
+            JSR     GET_SRC
+            RTS
                               
 ele001      LEA     DISP_WORD,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+
+            ; get register
+            
+            JSR     GET_SRC
+            RTS
 
 ele010      LEA     DISP_LONG,A1
             MOVE.B  #14,D0
             TRAP    #15
-            ; decode ea
-            STOP    #$2700
+            
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+
+            ; get register
+            
+            JSR     GET_SRC
+            RTS
                
 *========================================
 * 1100- AND/MULS
@@ -651,6 +875,7 @@ GET_SIZE    MOVE.B  D3,D5       * move instruction for shifting
             RTS   
             
             END     START
+
 
 
 
