@@ -1,97 +1,98 @@
 *-------------------------------------------------------
 * Decoding opcodes
+* D0: Trap task
 * D3: DO NOT CHANGE. Stores original instruction bits. 
 * D5: Temp stores instruction bits for decoding
 *
 * A0: Jump table
-* A2: Stores the string of the decoded instruction
+* A1: Stores the string of the decoded instruction
 *
 * TODO: -register shift
 *       -Error handling
 *       -code0000
+*       -code0110
 *       -testing  
 *-------------------------------------------------------
-example     EQU     %0100001100000000
+example     EQU     %1100100000010111
 
-            ORG     $400        
+            ORG     $400
 
-START:
-            MOVE.W  #example,D3 ; move instruction
-            MOVE.L  #12,D2      ; move shift num
-            MOVE.W  D3,D5       ; move to d5 to decode
+START:      
             
-            LSR.L   D2,D5       ; shift temp
-            MULU    #6,D5       ; multiply temp
-            LEA     JMP_TABLE,A0            
-            JSR     00(A0,D5)
+            MOVE.W  #example,D3     ; move instruction
+            MOVE.L  #12,D2          ; move shift num
+            MOVE.W  D3,D5           ; move to d5 to decode
+            
+            LSR.L   D2,D5           ; shift temp
+            MULU    #6,D5           ; multiply temp
+            LEA     JMP_TABLE,A0    ; load table          
+            JSR     00(A0,D5)       ; jump to table
+                      
+            
                
-              
-                 
+            
 *========================================
 * Jump table
 *========================================
-JMP_TABLE   JMP     code0000
-            JMP     code0001  
-            JMP     code0010 
-            JMP     code0011 
-            JMP     code0100
-            JMP     code0101
-            JMP     code0110 
-            JMP     code0111 
-            JMP     code1000 
-            JMP     code1001 
-            JMP     code1010 
-            JMP     code1011  
-            JMP     code1100  
-            JMP     code1101 
-            JMP     code1110    
-            JMP     code1111    
+JMP_TABLE   JMP     code0000        ; Bit manipulation/Immediate
+            JMP     code0001        ; MOVE.B
+            JMP     code0010        ; MOVE.L
+            JMP     code0011        ; MOVE.W        
+            JMP     code0100        ; MOVEM/CLR/LEA/DIVU.L/JSR/RTS
+            JMP     code0101        ; SUBQ
+            JMP     code0110        ; Bcc
+            JMP     code0111        ; MOVEQ
+            JMP     code1000        ; OR/DIVU.W
+            JMP     code1001        ; SUB
+            JMP     code1010        ; Unassigned
+            JMP     code1011        ; CMP
+            JMP     code1100        ; AND/MULS
+            JMP     code1101        ; ADD/ADDA
+            JMP     code1110        ; LSd/ASd/ROd
+            JMP     code1111        ; Special/Reserved
 
 
 *========================================
 * 0000- Bit manipulation/Immediate
 *========================================
-code0000       STOP        #$2700
+code0000    STOP    #$2700
 
 *========================================
 * 0001- MOVE.B
 *========================================
-code0001    MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #'O',(A2)+  * load O
-            MOVE.B  #'V',(A2)+  * load V
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'.',(A2)+  * load .
-            MOVE.B  #'B',(A2)+  * load B
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+code0001    LEA     DISP_MOVE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_BYTE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
 
 *========================================
 * 0010- MOVE.L
 *========================================            
-code0010    MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #'O',(A2)+  * load O
-            MOVE.B  #'V',(A2)+  * load V
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'.',(A2)+  * load .
-            MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+code0010    LEA     DISP_MOVE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
             
 *========================================
 * 0011- MOVE.W
 *========================================               
-code0011    MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #'O',(A2)+  * load O
-            MOVE.B  #'V',(A2)+  * load V
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'.',(A2)+  * load .
-            MOVE.B  #'W',(A2)+  * load W
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+code0011    LEA     DISP_MOVE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
             
@@ -139,33 +140,30 @@ four0000    STOP        #$2700
 *========================================
 * LEA <ea>,A0
 *========================================
-four0001    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four0001    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+
             ; decode ea
             STOP    #$2700
         
 *========================================
 * CLR <ea>
 *========================================            
-four0010    MOVE.B  #'C',(A2)+  * load C
-            MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'R',(A2)+  * load R
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four0010    LEA     DISP_CLR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ; decode ea
             STOP    #$2700
    
 *========================================
 * LEA <ea>,A1
 *========================================               
-four0011    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four0011    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
@@ -177,9 +175,10 @@ four0100    STOP        #$2700
 *========================================
 * LEA <ea>,A2
 *========================================
-four0101    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
+four0101    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
@@ -191,35 +190,30 @@ four0110    STOP        #$2700
 *========================================
 * LEA <ea>,A3
 *========================================
-four0111    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four0111    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
 *========================================
 * MOVEM- register to memory
 *========================================
-four1000    MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #'O',(A2)+  * load O
-            MOVE.B  #'V',(A2)+  * load V
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four1000    LEA     DISP_MOVEM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
 *========================================
 * LEA <ea>,A4
 *========================================
-four1001    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four1001    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
@@ -231,11 +225,10 @@ four1010    STOP        #$2700
 *========================================
 * LEA <ea>,A5
 *========================================
-four1011    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four1011    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
@@ -252,35 +245,30 @@ four1100    CLR.L   D5       * clear register
             ; err check
             STOP    #$2700
             
-            MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #'O',(A2)+  * load O
-            MOVE.B  #'V',(A2)+  * load V
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+            LEA     DISP_MOVEM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
-DEC_DIVU    MOVE.B  #'D',(A2)+  * load D
-            MOVE.B  #'I',(A2)+  * load I
-            MOVE.B  #'V',(A2)+  * load V
-            MOVE.B  #'U',(A2)+  * load U                     
-            MOVE.B  #'.',(A2)+  * load .
-            MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+DEC_DIVU    LEA     DISP_DIVU,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
             
 *========================================
 * LEA <ea>,A6
 *========================================
-four1101    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four1101    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ;decode ea
             STOP    #$2700
    
@@ -292,38 +280,33 @@ four1110    CMPI.W  #$4E75,D3   * RTS
             ; err check
             STOP    #$2700
             
-            MOVE.B  #'J',(A2)+  * load J
-            MOVE.B  #'S',(A2)+  * load S
-            MOVE.B  #'R',(A2)+  * load R
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+            LEA     DISP_JSR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
             ; find ea
             STOP    #$2700
 
-DEC_RTS     MOVE.B  #'R',(A2)+  * load R
-            MOVE.B  #'T',(A2)+  * load T
-            MOVE.B  #'S',(A2)+  * load S
+DEC_RTS     LEA     DISP_RTS,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             STOP    #$2700
             
 *========================================
 * LEA <ea>,A7
 *========================================
-four1111    MOVE.B  #'L',(A2)+  * load L
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'A',(A2)+  * load A
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+four1111    LEA     DISP_LEA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ;decode ea
             STOP    #$2700   
             
 *========================================
 * 0101- SUBQ
 *========================================
-code0101    MOVE.B  #'S',(A2)+  * load S
-            MOVE.B  #'U',(A2)+  * load U
-            MOVE.B  #'B',(A2)+  * load B
-            MOVE.B  #'Q',(A2)+  * load Q
-            MOVE.B  #'.',(A2)+  * load .
+code0101    LEA     DISP_SUBQ,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             JSR     GET_SIZE    * get size
             CMPI.B  #00,D5      * byte
             BEQ     SUBQ_B
@@ -331,21 +314,26 @@ code0101    MOVE.B  #'S',(A2)+  * load S
             BEQ     SUBQ_W
             CMPI.B  #10,D5      * long
             BEQ     SUBQ_L        
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+            
             ; decode ea
             ; err check
             STOP    #$2700
    
-SUBQ_B      MOVE.B  #'B',(A2)+  * load B
+SUBQ_B      LEA     DISP_BYTE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
             
-SUBQ_W      MOVE.B  #'W',(A2)+  * load W
+SUBQ_W      LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
             
-SUBQ_L      MOVE.B  #'L',(A2)+  * load L
+SUBQ_L      LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
             
@@ -357,13 +345,9 @@ code0110    STOP    #$2700
 *========================================
 * 0111- MOVEQ
 *========================================
-code0111    MOVE.B  #'M',(A2)+  * load M
-            MOVE.B  #'O',(A2)+  * load O
-            MOVE.B  #'V',(A2)+  * load V
-            MOVE.B  #'E',(A2)+  * load E
-            MOVE.B  #'Q',(A2)+  * load Q
-            MOVE.B  #' ',(A2)+  * load space
-            MOVE.B  #' ',(A2)+  * load space
+code0111    LEA     DISP_MOVEQ,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
 
@@ -380,30 +364,27 @@ code1000    CLR     D5       * clear register
             ; err check
             STOP    #$2700
             
-            MOVE.B  #'O',(A2)+   * load O
-            MOVE.B  #'R',(A2)+   * load R
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+            LEA     DISP_OR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
    
-DEC_DIVUW   MOVE.B  #'D',(A2)+   * load D
-            MOVE.B  #'I',(A2)+   * load I
-            MOVE.B  #'V',(A2)+   * load V
-            MOVE.B  #'U',(A2)+   * load U
-            MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'W',(A2)+   * load W
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+DEC_DIVUW   LEA     DISP_DIVU,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700                
            
 *========================================
 * 1001- SUB
 *========================================
-code1001    MOVE.B  #'S',(A2)+   * load S
-            MOVE.B  #'U',(A2)+   * load U
-            MOVE.B  #'B',(A2)+   * load B
+code1001    LEA     DISP_SUB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
                
 *========================================
@@ -420,9 +401,9 @@ code1011    LEA     ELE_TABLE,A0 *load table
             LSL.W   #7,D5     * isolate bits 6-8
             LSR.W   #8,D5
             LSR.W   #5,D5
-            MOVE.B  #'C',(A2)+   * load C
-            MOVE.B  #'M',(A2)+   * load M
-            MOVE.B  #'P',(A2)+   * load P
+            LEA     DISP_CLR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             
             CMPI.B  #$0,D5
             BEQ     ele000
@@ -442,27 +423,21 @@ ELE_TABLE
             JSR    ele001
             JSR    ele010
 
-ele000      MOVE.B  #'C',(A2)+   * load C
-            MOVE.B  #'M',(A2)+   * load M
-            MOVE.B  #'P',(A2)+   * load P
-            MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'B',(A2)+   * load B
+ele000      LEA     DISP_BYTE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                               
-ele001      MOVE.B  #'C',(A2)+   * load C
-            MOVE.B  #'M',(A2)+   * load M
-            MOVE.B  #'P',(A2)+   * load P
-            MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'W',(A2)+   * load W
+ele001      LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
 
-ele010      MOVE.B  #'C',(A2)+   * load C
-            MOVE.B  #'M',(A2)+   * load M
-            MOVE.B  #'P',(A2)+   * load P
-            MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'L',(A2)+   * load L
+ele010      LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
@@ -478,10 +453,9 @@ code1100    CLR     D5      * clear register
             BEQ     DEC_MULS
             STOP    #$2700
    
-            MOVE.B  #'A',(A2)+   * load A
-            MOVE.B  #'N',(A2)+   * load N
-            MOVE.B  #'D',(A2)+   * load D
-            MOVE.B  #'.',(A2)+   * load .
+            LEA     DISP_AND,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             CMPI.B  #$0,D5
             BEQ     AND_B
             CMPI.B  #$1,D5
@@ -491,40 +465,34 @@ code1100    CLR     D5      * clear register
             ; err check, not b,w,l
             STOP    #$2700
                
-AND_B       MOVE.B  #'B',(A2)+   * load B
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+AND_B       LEA     DISP_BYTE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
              
-AND_W       MOVE.B  #'W',(A2)+   * load W
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+AND_W       LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
-AND_L       MOVE.B  #'L',(A2)+   * load L
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+AND_L       LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
-DEC_MULS    MOVE.B  #'M',(A2)+   * load M
-            MOVE.B  #'U',(A2)+   * load U
-            MOVE.B  #'L',(A2)+   * load L
-            MOVE.B  #'S',(A2)+   * load S
-            MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+DEC_MULS    LEA     DISP_MULS,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             STOP    #$2700
                
 *========================================
 * 1101- ADD/ADDA
 *========================================              
-code1101    MOVE.B  #'A',(A2)+   * load A
-            MOVE.B  #'D',(A2)+   * load D
-            MOVE.B  #'D',(A2)+   * load D
-               
+code1101    CLR     D5
+            MOVE.W  D3,D5
             LSL.W   #8,D5     * isolate bits 6-8
             LSR.W   #8,D5
             LSR.W   #6,D5
@@ -541,40 +509,48 @@ code1101    MOVE.B  #'A',(A2)+   * load A
             ; err check
             STOP    #$2700            
  
-ADD_B       MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'B',(A2)+   * load B
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+ADD_B       LEA     DISP_ADD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_BYTE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
-ADD_W       MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'W',(A2)+   * load W
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+ADD_W       LEA     DISP_ADD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
-ADD_L       MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'L',(A2)+   * load L
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+ADD_L       LEA     DISP_ADD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
-ADDA_W      MOVE.B  #'A',(A2)+   * load A
-            MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'W',(A2)+   * load B
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+ADDA_W      LEA     DISP_ADDA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
-ADDA_L      MOVE.B  #'A',(A2)+   * load A
-            MOVE.B  #'.',(A2)+   * load .
-            MOVE.B  #'L',(A2)+   * load L
-            MOVE.B  #' ',(A2)+   * load space
-            MOVE.B  #' ',(A2)+   * load space
+ADDA_L      LEA     DISP_ADDA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
 
@@ -612,69 +588,57 @@ MEM_SHIFT   CLR     D5
 *========================================
 * LSR memory shift
 *========================================
-MS_LSR      MOVE.B  #'L',(A2)+
-            MOVE.B  #'S',(A2)+
-            MOVE.B  #'R',(A2)+
-            MOVE.B  #' ',(A2)+
-            MOVE.B  #' ',(A2)+
+MS_LSR      LEA     DISP_LSR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
 
 *========================================
 * LSL memory shift
 *========================================               
-MS_LSL      MOVE.B  #'L',(A2)+
-            MOVE.B  #'S',(A2)+
-            MOVE.B  #'L',(A2)+
-            MOVE.B  #' ',(A2)+
-            MOVE.B  #' ',(A2)+
+MS_LSL      LEA     DISP_LSL,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
              
 *========================================
 * ASR memory shift
 *========================================  
-MS_ASR      MOVE.B  #'A',(A2)+
-            MOVE.B  #'S',(A2)+
-            MOVE.B  #'R',(A2)+
-            MOVE.B  #' ',(A2)+
-            MOVE.B  #' ',(A2)+
+MS_ASR      LEA     DISP_ASR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
 
 *========================================
 * ASL memory shift
 *========================================               
-MS_ASL      MOVE.B  #'A',(A2)+
-            MOVE.B  #'S',(A2)+
-            MOVE.B  #'L',(A2)+
-            MOVE.B  #' ',(A2)+
-            MOVE.B  #' ',(A2)+
+MS_ASL      LEA     DISP_ASR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
                
 *========================================
 * ROR memory shift
 *========================================               
-MS_ROR      MOVE.B  #'R',(A2)+
-            MOVE.B  #'O',(A2)+
-            MOVE.B  #'R',(A2)+
-            MOVE.B  #' ',(A2)+
-            MOVE.B  #' ',(A2)+
+MS_ROR      LEA     DISP_ROR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
 
 *========================================
 * ROL memory shift
 *========================================               
-MS_ROL      MOVE.B  #'R',(A2)+
-            MOVE.B  #'O',(A2)+
-            MOVE.B  #'L',(A2)+
-            MOVE.B  #' ',(A2)+
-            MOVE.B  #' ',(A2)+
+MS_ROL      LEA     DISP_ROL,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             ; decode ea
             STOP    #$2700
-
+                
 *========================================
 * 1111- Special/Reserved
 *========================================
@@ -685,9 +649,47 @@ GET_SIZE    MOVE.B  D3,D5       * move instruction for shifting
             LSR.B   #6,D5       * move size to LSB
             RTS   
             
-            END     $400
+*========================================
+* Display constants
+* TODO: Move to another file
+*========================================
+DISP_NOP        DC.B    'NOP',0
+DISP_MOVE       DC.B    'MOVE',0
+DISP_MOVEA      DC.B    'MOVEA',0
+DISP_MOVEQ      DC.B    'MOVEQ',0
+DISP_MOVEM      DC.B    'MOVEM',0
+DISP_ADD        DC.B    'ADD',0
+DISP_ADDA       DC.B    'ADDA',0
+DISP_ADDI       DC.B    'ADDI',0
+DISP_ADDQ       DC.B    'ADDQ',0
+DISP_SUB        DC.B    'SUB',0
+DISP_MULS       DC.B    'MULS',0
+DISP_DIVU       DC.B    'DIVU',0
+DISP_LEA        DC.B    'LEA',0
+DISP_CLR        DC.B    'CLR',0
+DISP_AND        DC.B    'CLR',0
+DISP_OR         DC.B    'OR',0
+DISP_LSL        DC.B    'LSL',0
+DISP_LSR        DC.B    'LSR',0
+DISP_ASL        DC.B    'ASL',0
+DISP_ASR        DC.B    'ASR',0
+DISP_ROL        DC.B    'ROL',0
+DISP_ROR        DC.B    'ROR',0
+DISP_CMP        DC.B    'CMP',0
+DISP_BCC        DC.B    'BCC',0
+DISP_BGT        DC.B    'BGT',0
+DISP_BLE        DC.B    'BLE',0
+DISP_JSR        DC.B    'JSR',0
+DISP_RTS        DC.B    'RTS',0
+DISP_SUBQ       DC.B    'SUBQ',0
 
+DISP_BYTE       DC.B    '.B',0
+DISP_WORD       DC.B    '.W',0
+DISP_LONG       DC.B    '.L',0
 
+CR              EQU     $0D
+LF              EQU     $0A
+            END     START
 
 
 *~Font name~Courier New~
