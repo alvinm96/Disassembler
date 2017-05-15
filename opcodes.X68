@@ -13,13 +13,17 @@
 *       -code0110
 *       -testing  
 *-------------------------------------------------------
-example     EQU     %0001000001000111
+example     EQU     %0001111000000001
 
             ORG     $1000
 
             INCLUDE 'display.X68'            
             INCLUDE 'ea.X68'
-START:                     
+            
+START:            
+
+*========Loop through instructions here
+         
             MOVE.W  #example,D3     ; move instruction
             MOVE.L  #12,D2          ; move shift num
             MOVE.W  D3,D5           ; move to d5 to decode
@@ -27,8 +31,8 @@ START:
             LSR.L   D2,D5           ; shift temp
             MULU    #6,D5           ; multiply temp
             LEA     JMP_TABLE,A0    ; load table          
-            JSR     00(A0,D5)       ; jump to table
-                      
+            JSR     00(A0,D5)       ; jump to table            
+
 *========================================
 * Jump table
 *========================================
@@ -66,8 +70,7 @@ code0001    LEA     DISP_MOVE,A1        * display MOVE
             TRAP    #15
     
             JSR     EAMOVE              * decode ea
-
-
+            RTS
 *========================================
 * 0010- MOVE.L
 *========================================            
