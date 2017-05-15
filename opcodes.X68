@@ -13,12 +13,13 @@
 *       -code0110
 *       -testing  
 *-------------------------------------------------------
-example     EQU     %1100100000010111
+example     EQU     %0001000001000111
 
-            ORG     $400
-
-START:      
+            ORG     $1000
             
+            INCLUDE 'ea.X68'
+
+START:                     
             MOVE.W  #example,D3     ; move instruction
             MOVE.L  #12,D2          ; move shift num
             MOVE.W  D3,D5           ; move to d5 to decode
@@ -28,9 +29,6 @@ START:
             LEA     JMP_TABLE,A0    ; load table          
             JSR     00(A0,D5)       ; jump to table
                       
-            
-               
-            
 *========================================
 * Jump table
 *========================================
@@ -60,15 +58,15 @@ code0000    STOP    #$2700
 *========================================
 * 0001- MOVE.B
 *========================================
-code0001    LEA     DISP_MOVE,A1
+code0001    LEA     DISP_MOVE,A1        * display MOVE
             MOVE.B  #14,D0
             TRAP    #15
-            LEA     DISP_BYTE,A1
+            LEA     DISP_BYTE,A1        * display byte
             MOVE.B  #14,D0
             TRAP    #15
-            
-            ;decode ea
-            STOP    #$2700
+    
+            JSR     EAMOVE              * decode ea
+
 
 *========================================
 * 0010- MOVE.L
@@ -99,14 +97,14 @@ code0011    LEA     DISP_MOVE,A1
 *========================================
 * 0100- MOVEM/CLR/LEA/DIVU.L/JSR/RTS
 *========================================      
-code0100    LEA     FOUR_TABLE,A0 *load table
+code0100    LEA     FOUR_TABLE,A2 *load table
             CLR.L   D5       * clear register
             MOVE.W  D3,D5    * move instruction
             LSL.W   #4,D5    * remove left 4 bits
             LSR.W   #8,D5   * gets bits
             LSR.W   #4,D5   * gets bits
             MULU    #6,D5    * form offset
-            JSR     0(A0,D5) * decode next level
+            JSR     0(A2,D5) * decode next level
             
             STOP    #$2700
             
@@ -144,7 +142,7 @@ four0001    LEA     DISP_LEA,A1
             MOVE.B  #14,D0
             TRAP    #15
 
-            ; decode ea
+            JSR     EAMOVE
             STOP    #$2700
         
 *========================================
