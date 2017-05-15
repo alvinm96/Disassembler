@@ -28,7 +28,6 @@ EAMOVE      MOVE.W  D3,D4       ; move instruction for src mode
             LSR.W   #6,D6
             JSR     CHECK_MODE
             
-            
 CHECK_MODE  CMPI.B  #%000,D4    ; Dn
             BEQ     MODE_DN
             CMPI.B  #%001,D4
@@ -94,33 +93,7 @@ MODE_ALA
 *========================================
 * Absolute Word Address
 *========================================
-MODE_AWA
-
-
-*========================================
-* Display constants
-* TODO: Move to another file
-*========================================
-DISP_DN         DC.B    'D',0   ; data register
-DISP_AN         DC.B    'A',0   ; address register
-DISP_DS         DC.B    '$',0   ; dolla sign
-DISP_PS         DC.B    '#',0   ; pound sign
-DISP_OP         DC.B    '(',0   ; open parenthesis 
-DISP_CP         DC.B    ')',0   ; closed paranthesis
-DISP_DEC        DC.B    '-',0   ; decrement
-DISP_INC        DC.B    '+',0   ; increment  
-DISP_COM        DC.B    ',',0   ; comma
-DISP_TAB        DC.B    '  ',0   ; tab
-            
-REG_0           DC.B    '0',0           
-REG_1           DC.B    '1',0  
-REG_2           DC.B    '2',0  
-REG_3           DC.B    '3',0  
-REG_4           DC.B    '4',0  
-REG_5           DC.B    '5',0  
-REG_6           DC.B    '6',0  
-REG_7           DC.B    '7',0            
-          
+MODE_AWA          
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~

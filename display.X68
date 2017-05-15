@@ -47,6 +47,7 @@ DISP_CP         DC.B    ')',0   ; closed paranthesis
 DISP_DEC        DC.B    '-',0   ; decrement
 DISP_INC        DC.B    '+',0   ; increment  
 DISP_COM        DC.B    ',',0   ; comma
+DISP_TAB        DC.B    '  ',0  ; tab
             
 REG_0           DC.B    '0',0           
 REG_1           DC.B    '1',0  
@@ -56,6 +57,7 @@ REG_4           DC.B    '4',0
 REG_5           DC.B    '5',0  
 REG_6           DC.B    '6',0  
 REG_7           DC.B    '7',0
+
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~

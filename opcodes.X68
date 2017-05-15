@@ -6,7 +6,7 @@
 *
 * A0: Jump table
 * A1: Stores the string of the decoded instruction
-*
+
 * TODO: -register shift
 *       -Error handling
 *       -code0000
@@ -16,9 +16,9 @@
 example     EQU     %0001000001000111
 
             ORG     $1000
-            
-            INCLUDE 'ea.X68'
 
+            INCLUDE 'display.X68'            
+            INCLUDE 'ea.X68'
 START:                     
             MOVE.W  #example,D3     ; move instruction
             MOVE.L  #12,D2          ; move shift num
@@ -647,46 +647,6 @@ GET_SIZE    MOVE.B  D3,D5       * move instruction for shifting
             LSR.B   #6,D5       * move size to LSB
             RTS   
             
-*========================================
-* Display constants
-* TODO: Move to another file
-*========================================
-DISP_NOP        DC.B    'NOP',0
-DISP_MOVE       DC.B    'MOVE',0
-DISP_MOVEA      DC.B    'MOVEA',0
-DISP_MOVEQ      DC.B    'MOVEQ',0
-DISP_MOVEM      DC.B    'MOVEM',0
-DISP_ADD        DC.B    'ADD',0
-DISP_ADDA       DC.B    'ADDA',0
-DISP_ADDI       DC.B    'ADDI',0
-DISP_ADDQ       DC.B    'ADDQ',0
-DISP_SUB        DC.B    'SUB',0
-DISP_MULS       DC.B    'MULS',0
-DISP_DIVU       DC.B    'DIVU',0
-DISP_LEA        DC.B    'LEA',0
-DISP_CLR        DC.B    'CLR',0
-DISP_AND        DC.B    'CLR',0
-DISP_OR         DC.B    'OR',0
-DISP_LSL        DC.B    'LSL',0
-DISP_LSR        DC.B    'LSR',0
-DISP_ASL        DC.B    'ASL',0
-DISP_ASR        DC.B    'ASR',0
-DISP_ROL        DC.B    'ROL',0
-DISP_ROR        DC.B    'ROR',0
-DISP_CMP        DC.B    'CMP',0
-DISP_BCC        DC.B    'BCC',0
-DISP_BGT        DC.B    'BGT',0
-DISP_BLE        DC.B    'BLE',0
-DISP_JSR        DC.B    'JSR',0
-DISP_RTS        DC.B    'RTS',0
-DISP_SUBQ       DC.B    'SUBQ',0
-
-DISP_BYTE       DC.B    '.B',0
-DISP_WORD       DC.B    '.W',0
-DISP_LONG       DC.B    '.L',0
-
-CR              EQU     $0D
-LF              EQU     $0A
             END     START
 
 
