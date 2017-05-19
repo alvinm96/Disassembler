@@ -30,8 +30,8 @@ IO_PROMPT   EQU     $0000A000
 * Define messages
 *===================================================
 MSG_INTRO   DC.B   'Welcome to disassembler',0
-MSG_START   DC.B   'Please enter starting address',0
-MSG_END     DC.B   'Please enter ending address',0
+MSG_START   DC.B   'Please enter starting address: ',0
+MSG_END     DC.B   'Please enter ending address: ' ,0
 MSG_BADADR  DC.B   'Address must be a valid hexadecimal number',0
 
             ORG     START
@@ -57,7 +57,7 @@ PROMPT_USR
 
 INPUT            
             LEA         MSG_START,A1    * REQUEST STARTING ADDRESS
-            MOVE.B      #13,D0
+            MOVE.B      #14,D0
             TRAP        #15    
             
             LEA         IO_PROMPT,A1    * TAKE STARTING ADDRESS STORE IN A5
@@ -67,7 +67,7 @@ INPUT
             MOVE.L      D1,A5
 
             LEA         MSG_END,A1      * REQUEST ENDING ADDRESS
-            MOVE.B      #13,D0
+            MOVE.B      #14,D0
             TRAP        #15
             
             LEA         IO_PROMPT,A1    * TAKE ENDING ADDRESS STORE IN A6
@@ -202,6 +202,8 @@ END_A       DS.B   1
     
     
     END    START        ; last line of source
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
