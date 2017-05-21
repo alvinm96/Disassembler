@@ -19,22 +19,15 @@ GET_SRC     LEA     MODE_TABLE,A0   ; load mode jump table
             LSR.W   D2,D6
             
             MULU    #6,D4
-            JSR     00(A0,D4)        ; jump to table
+            JSR     00(A0,D4)       ; jump to table
             RTS
  
 GET_DEST    LEA     MODE_TABLE,A0   ; load mode jump table       
-            MOVE.W  D3,D6           ; move instruction for dest register
-            LSL.W   #4,D6           ; get register bits (9-11)
-            LSR.W   #8,D6
-            LSR.W   #5,D6
 
-            MOVE.W  D3,D4           ; move instruction for dest mode
-            LSL.W   #7,D4           ; get mode bits (6-8)
-            LSR.W   #8,D4
-            LSR.W   #4,D4
+            JSR     GET_OPMODE
             
-            MULU    #6,D4
-            JSR     0(A0,D4)        ; jump to table
+            MULU    #6,D5
+            JSR     0(A0,D5)        ; jump to table
             RTS
             
 *========================================
@@ -55,7 +48,8 @@ MODE_TABLE  JMP     MODE_000
 MODE_000    LEA     DISP_DN,A1
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; get register
+            JSR     GET_911
+            MOVE.B  D5,D1       ; get register
             EXT.L   D1
             MOVE.B  #3,D0
             TRAP    #15
@@ -147,7 +141,7 @@ MODE_110    STOP    #$2700
 * Immediate Data/Absolute Word/Absolute Long
 *========================================
 MODE_111    LEA     SEV_TABLE,A0
-            MULU    #6,D6
+            MULU    #4,D6
             JSR     0(A0,D6)
             RTS
 
@@ -159,15 +153,15 @@ SEV_TABLE   JMP     MODE_AWA
 *========================================
 * Absolute Word Address
 *========================================
-MODE_AWA    CLR     D0
-
-            LEA     DISP_PS,A1
-            MOVE.B  #14,D0
+MODE_AWA    LEA     DISP_PS,A1
             TRAP    #15
-                    
+            LEA     DISP_DS,A1
+            TRAP    #15        
             ADDA.W  #2,A5           * move address to read next word
-            MOVE.W  (A5),D5         * move instruction
             
+            
+            MOVE.B  #12,D2          * displacement
+            JSR     PRINT_ADDRESS      
             
             RTS  
 
@@ -180,12 +174,12 @@ MODE_ALA    CLR     D0
             TRAP    #15
             
             ADDA.W  #2,A3           * move address to read next word
-            MOVE.W  (A3),D5           * move instruction
             
-            JSR     DISP_REG      
+            MOVE.B  #32,D2          * displacement
+            JSR     PRINT_ADDRESS     
             
             RTS  
-      
+
 *========================================
 * Immediate Data
 *========================================   
@@ -196,8 +190,25 @@ MODE_IMM    LEA     DISP_PS,A1      * display pound sign
             MOVE.B  #14,D0
             TRAP    #15
             
-
             RTS
+
+PRINT_ADDRESS
+            LEA     TABLE_HEXCHAR,A2
+            MOVE.B  #0,D1           * num to shift
+
+PRINT_LOOP  MOVE.W  (A5),D5         * move instruction
+            LSL.W   D1,D5
+            LSR.W   D2,D5
+            MULU    #2,D5
+            LEA     0(A2,D5),A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            CMP.B   D2,D1
+            BEQ     DONE_PRINT
+            ADD.W   #4,D1
+            JMP     PRINT_LOOP
+            
+DONE_PRINT  RTS
 
 *========================================
 * Display the number in register D5 in decimal
@@ -206,7 +217,7 @@ DISP_REG    MOVE.B  D5,D1       ; get register
             EXT.L   D1
             MOVE.B  #3,D0
             TRAP    #15
-            RTS    
+            RTS     
             
 *========================================
 * Display the register number in hex
@@ -223,7 +234,7 @@ GET_911     MOVE.W  D3,D5
             LSL.W   #4,D5
             LSR.W   #8,D5
             LSR.W   #5,D5
-            JSR     DISP_REG
+            
             RTS
             
 *========================================
@@ -241,6 +252,7 @@ DISP_DATA   LEA     DISP_PS,A1
             TRAP    #15
             
             JSR     GET_911
+            JSR     DISP_REG
             RTS
             
 *========================================
@@ -290,7 +302,6 @@ SHIFT_02    MOVE.B  D3,D5
             JSR     DISP_REG         
             RTS
             
-
 
 *~Font name~Courier New~
 *~Font size~10~

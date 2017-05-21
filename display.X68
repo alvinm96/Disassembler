@@ -1,10 +1,18 @@
 *-------------------------------------------------------
 * Display opcodes
 *-------------------------------------------------------
-CR              EQU     $0D
-LF              EQU     $0A
+                OPT     CRE
+S_PTR           EQU     $00100000
+CR              EQU     $0D                  * CARRIAGE RETURN
+LF              EQU     $0A                  * LINE FEED
+IO_PROMPT       EQU     $0000A000
 
-NEW_LINE        DC.B    'HEKKI',CR,LF,0
+MSG_INTRO       DC.B   'Welcome to disassembler',0
+MSG_START       DC.B   'Please enter starting address: ',0
+MSG_END         DC.B   'Please enter ending address: ' ,0
+MSG_BADADR      DC.B   'Address must be a valid hexadecimal number',0
+
+NEW_LINE        DC.B    CR,LF,0
 
 DISP_NOP        DC.B    'NOP',0
 DISP_MOVE       DC.B    'MOVE',0
@@ -58,6 +66,23 @@ REG_4           DC.B    '4',0
 REG_5           DC.B    '5',0  
 REG_6           DC.B    '6',0  
 REG_7           DC.B    '7',0
+
+TABLE_HEXCHAR   DC.B    '0',0
+                DC.B    '1',0
+                DC.B    '2',0
+                DC.B    '3',0
+                DC.B    '4',0
+                DC.B    '5',0
+                DC.B    '6',0
+                DC.B    '7',0
+                DC.B    '8',0
+                DC.B    '9',0
+                DC.B    'A',0 
+                DC.B    'B',0
+                DC.B    'C',0
+                DC.B    'D',0
+                DC.B    'E',0
+                DC.B    'F',0
 
 
 

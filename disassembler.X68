@@ -136,37 +136,37 @@ END_HEX
             CLR.L       D3
             RTS
             
-x0          ADDI.L       #$0,D3          * D3 used to store HEX num
+x0          ADDI.L      #$0,D3          * D3 used to store HEX num
             JMP         ASC_HEX_LOOP
-x1          ADDI.L       #$1,D3        
+x1          ADDI.L      #$1,D3        
             JMP         ASC_HEX_LOOP
-x2          ADDI.L       #$2,D3        
+x2          ADDI.L      #$2,D3        
             JMP         ASC_HEX_LOOP
-x3          ADDI.L       #$3,D3        
+x3          ADDI.L      #$3,D3        
             JMP         ASC_HEX_LOOP
-x4          ADDI.L       #$4,D3        
+x4          ADDI.L      #$4,D3        
             JMP         ASC_HEX_LOOP
-x5          ADDI.L       #$5,D3        
+x5          ADDI.L      #$5,D3        
             JMP         ASC_HEX_LOOP
-x6          ADDI.L       #$6,D3        
+x6          ADDI.L      #$6,D3        
             JMP         ASC_HEX_LOOP
-x7          ADDI.L       #$7,D3        
+x7          ADDI.L      #$7,D3        
             JMP         ASC_HEX_LOOP
-x8          ADDI.L       #$8,D3        
+x8          ADDI.L      #$8,D3        
             JMP         ASC_HEX_LOOP
-x9          ADDI.L       #$9,D3        
+x9          ADDI.L      #$9,D3        
             JMP         ASC_HEX_LOOP
-xA          ADDI.L       #$A,D3        
+xA          ADDI.L      #$A,D3        
             JMP         ASC_HEX_LOOP
-xB          ADDI.L       #$B,D3        
+xB          ADDI.L      #$B,D3        
             JMP         ASC_HEX_LOOP
-xC          ADDI.L       #$C,D3        
+xC          ADDI.L      #$C,D3        
             JMP         ASC_HEX_LOOP
-xD          ADDI.L       #$D,D3        
+xD          ADDI.L      #$D,D3        
             JMP         ASC_HEX_LOOP
-xE          ADDI.L       #$E,D3        
+xE          ADDI.L      #$E,D3        
             JMP         ASC_HEX_LOOP
-xF          ADDI.L       #$F,D3   
+xF          ADDI.L      #$F,D3   
             JMP         ASC_HEX_LOOP
             
 BAD_INPUT   LEA         MSG_BADADR,A1
@@ -202,6 +202,7 @@ END_A       DS.B   1
     
     
     END    START        ; last line of source
+
 
 
 
