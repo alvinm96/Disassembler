@@ -1,33 +1,36 @@
 *-----------------------------------------------------------
 * Decode effective addresses
 * D3: DO NOT CHANGE. Stores original instruction bits.
-* D4: Mode
+* D5: Mode
 * D6: Register
 *
 * A0: Jump table
 * A1: Stores the string of the decoded instruction
 *-----------------------------------------------------------                           
-GET_SRC     LEA     MODE_TABLE,A0   ; load mode jump table
-            MOVE.W  D3,D4           ; move instruction for src mode
-            MOVE.B  #10,D2          ; get mode bits (3-5)
-            LSL.W   D2,D4
-            MOVE.B  #13,D2
-            LSR.W   D2,D4 
 
-            MOVE.W  D3,D6           ; move instruction for src register
-            LSL.W   D2,D6           ; get register bits (0-2)
-            LSR.W   D2,D6
-            
-            MULU    #6,D4
-            JSR     00(A0,D4)       ; jump to table
+*========================================
+* Decodes source bits
+* Decodes EA
+* Bits 0-5
+*========================================
+GET_SRC     LEA     MODE_TABLE,A2   ; load mode jump table
+            JSR     GET_02          ; get register for bits 0-2
+            MOVE.B  D5,D6           ; move register value to D6
+            JSR     GET_35          ; jump to store bits 3-5 in D5
+            MULU    #6,D5           ; offset mode
+            JSR     0(A2,D5)        ; jump to mode
             RTS
- 
-GET_DEST    LEA     MODE_TABLE,A0   ; load mode jump table       
 
-            JSR     GET_OPMODE
-            
-            MULU    #6,D5
-            JSR     0(A0,D5)        ; jump to table
+*========================================
+* Decodes destination bits
+* Bits 6-11
+*======================================== 
+GET_DEST    LEA     MODE_TABLE,A2   ; load mode jump table       
+            JSR     GET_911         ; get register
+            MOVE.B  D5,D6           ; move register value to D6
+            JSR     GET_OPMODE      ; get mode
+            MULU    #6,D5           ; offset mode
+            JSR     0(A2,D5)        ; jump to mode
             RTS
             
 *========================================
@@ -43,125 +46,120 @@ MODE_TABLE  JMP     MODE_000
             JMP     MODE_111            
 
 *========================================
-* Data Register Direct
+* Dn
 *========================================
-MODE_000    LEA     DISP_DN,A1
+MODE_000    LEA     DISP_DN,A1  ; display D
             MOVE.B  #14,D0
             TRAP    #15
-            JSR     GET_911
-            MOVE.B  D5,D1       ; get register
-            EXT.L   D1
+            MOVE.B  D6,D1       ; move register value to D1 for printing
+            EXT.L   D1          ; print register value
             MOVE.B  #3,D0
             TRAP    #15
             RTS
             
 *========================================
-* Address Register Direct
+* An
 *========================================     
-MODE_001    LEA     DISP_AN,A1
+MODE_001    LEA     DISP_AN,A1  ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; get register
-            EXT.L   D1
+            MOVE.B  D6,D1       ; move register value for printing
+            EXT.L   D1          ; print register value
             MOVE.B  #3,D0
             TRAP    #15
             RTS
 
 *========================================
-* Address Register Indirect
+* (An)
 *========================================
-MODE_010    LEA     DISP_OP,A1
+MODE_010    LEA     DISP_OP,A1  ; display (
             MOVE.B  #14,D0
             TRAP    #15
-            LEA     DISP_AN,A1
+            LEA     DISP_AN,A1  ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; get register
-            EXT.L   D1
+            MOVE.B  D6,D1       ; move register value for printing
+            EXT.L   D1          ; print register value
             MOVE.B  #3,D0
             TRAP    #15
-            LEA     DISP_CP,A1
+            LEA     DISP_CP,A1  ; display )
             MOVE.B  #14,D0
             TRAP    #15
             RTS
 
 *========================================
-* Address Register Indirect with Post incremement 
+* (An)+
 *========================================
-MODE_011    LEA     DISP_OP,A1
+MODE_011    LEA     DISP_OP,A1  ; display (
             MOVE.B  #14,D0
             TRAP    #15
-            LEA     DISP_AN,A1
+            LEA     DISP_AN,A1  ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; get register
-            EXT.L   D1
+            MOVE.B  D6,D1       ; move register value for printing
+            EXT.L   D1          ; print register value
             MOVE.B  #3,D0
             TRAP    #15
-            LEA     DISP_CP,A1
+            LEA     DISP_CP,A1  ; display )
             MOVE.B  #14,D0
             TRAP    #15
-            LEA     DISP_INC,A1
+            LEA     DISP_INC,A1 ; display +
             MOVE.B  #14,D0
             TRAP    #15
             RTS
 
 *========================================
-* Address Register Indirect with Pre decremement 
+* -(An)
 *========================================
-MODE_100    LEA     DISP_DEC,A1
+MODE_100    LEA     DISP_DEC,A1 ; display -
             MOVE.B  #14,D0
             TRAP    #15
-            LEA     DISP_OP,A1
+            LEA     DISP_OP,A1  ; display (
             MOVE.B  #14,D0
             TRAP    #15
-            LEA     DISP_AN,A1
+            LEA     DISP_AN,A1  ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; get register
-            EXT.L   D1
+            MOVE.B  D6,D1       ; move register value for printing
+            EXT.L   D1          ; print register value
             MOVE.B  #3,D0
             TRAP    #15
-            LEA     DISP_CP,A1
+            LEA     DISP_CP,A1  ; display )
             MOVE.B  #14,D0
             TRAP    #15
             RTS
+
+*========================================
+* (D16,An)
+*========================================
+MODE_101    RTS
+
+*========================================
+* (D8,An,Xn)
+*========================================
+MODE_110    RTS
 
 *========================================
 * Immediate Data/Absolute Word/Absolute Long
 *========================================
-MODE_101    STOP    #$2700
-
-*========================================
-* Immediate Data/Absolute Word/Absolute Long
-*========================================
-MODE_110    STOP    #$2700
-
-*========================================
-* Immediate Data/Absolute Word/Absolute Long
-*========================================
-MODE_111    LEA     SEV_TABLE,A0
-            MULU    #4,D6
-            JSR     0(A0,D6)
-            RTS
-
-SEV_TABLE   JMP     MODE_AWA
-            JMP     MODE_ALA
-            JMP     MODE_IMM
-           
-            
+MODE_111    CMPI.W  #%000,D6    ; register value 000
+            BEQ     MODE_AWA
+            CMPI.W  #%001,D6    ; register value 001
+            BEQ     MODE_ALA
+            CMPI.W  #%100,D6    ; register value 000
+            BEQ     MODE_IMM
+            ;TODO: err
+                                 
 *========================================
 * Absolute Word Address
 *========================================
-MODE_AWA    LEA     DISP_PS,A1
-            TRAP    #15
-            LEA     DISP_DS,A1
+MODE_AWA    CLR     D0
+            LEA     DISP_DS,A1      * print $
+            MOVE.B  #14,D0
             TRAP    #15        
-            ADDA.W  #2,A5           * move address to read next word
-            
-            
-            MOVE.B  #12,D2          * displacement
-            JSR     PRINT_ADDRESS      
+            ADDA.W  #2,A5           * move address to read next word                       
+           
+            JSR     PRINT_HEX   
             
             RTS  
 
@@ -169,49 +167,87 @@ MODE_AWA    LEA     DISP_PS,A1
 * Absolute Long Address
 *========================================
 MODE_ALA    CLR     D0
-            LEA     DISP_DS,A1      * display dolla sign
+            LEA     DISP_DS,A1      * print $
             MOVE.B  #14,D0
             TRAP    #15
+            ADDA.W  #2,A5           * move address to read next word
             
-            ADDA.W  #2,A3           * move address to read next word
-            
-            MOVE.B  #32,D2          * displacement
-            JSR     PRINT_ADDRESS     
+            JSR     PRINT_HEX   * print first word
+            ADDA.W  #2,A5           * move to next address
+            JSR     PRINT_HEX   * print second half of word
             
             RTS  
 
 *========================================
 * Immediate Data
 *========================================   
-MODE_IMM    LEA     DISP_PS,A1      * display pound sign
+MODE_IMM    LEA     DISP_PS,A1      * print #
             MOVE.B  #14,D0
             TRAP    #15
-            LEA     DISP_DS,A1      * display dolla sign
+            LEA     DISP_DS,A1      * print $
             MOVE.B  #14,D0
             TRAP    #15
+                      
+            ADDA.W  #2,A5           * move address to read next word
             
+            MOVE.B  SIZE,D5
+            CMPI.B  #1,D5           * byte = 0; word = 1; long = 2
+            BGT     IMM_LONG
+            
+IMM_WORD    JSR     PRINT_HEX   * print first word   
             RTS
 
-PRINT_ADDRESS
-            LEA     TABLE_HEXCHAR,A2
-            MOVE.B  #0,D1           * num to shift
+IMM_LONG    JSR     PRINT_HEX  
+            ADDA.W  #2,A5           * move to next address
+            JSR     PRINT_HEX   * print second half of word   
+            RTS
+            
 
-PRINT_LOOP  MOVE.W  (A5),D5         * move instruction
-            LSL.W   D1,D5
-            LSR.W   D2,D5
-            MULU    #2,D5
-            LEA     0(A2,D5),A1
+*========================================
+* Print D5 in hex
+*========================================  
+PRINT_ADDRESS
+            LEA     TABLE_HtoA,A2    * load hex-ascii values
+            MOVE.B  #28,D2              * starting displacement    
+            MOVE.B  #0,D1               * bits that already been shifted            
+
+PRINT_ADDRESS_LOOP  
+            MOVE.L  A5,D5               * move instruction
+            LSL.L   D1,D5               * remove bits that been shifted
+            LSR.L   D2,D5               * shift to get nibble
+            MULU    #2,D5               * offset for ascii values
+            LEA     0(A2,D5),A1         * print ascii value
             MOVE.B  #14,D0
             TRAP    #15
-            CMP.B   D2,D1
-            BEQ     DONE_PRINT
-            ADD.W   #4,D1
-            JMP     PRINT_LOOP
+            CMP.B   D2,D1               * check if ended
+            BEQ     DONE_PRINT          * branch to end
+            ADD.W   #4,D1               * add to num bits that have been shifted
+            JMP     PRINT_ADDRESS_LOOP  * jump to beginning
+
+*========================================
+* Print D5 in hex
+*========================================  
+PRINT_HEX
+            LEA     TABLE_HtoA,A2    * load hex-ascii values
+            MOVE.B  #12,D2              * starting displacement    
+            MOVE.B  #0,D1               * bits that already been shifted            
+
+PRINT_LOOP  MOVE.W  (A5),D5             * move instruction
+            LSL.W   D1,D5               * remove bits that been shifted
+            LSR.W   D2,D5               * shift to get nibble
+            MULU    #2,D5               * offset for ascii values
+            LEA     0(A2,D5),A1         * print ascii value
+            MOVE.B  #14,D0
+            TRAP    #15
+            CMP.B   D2,D1               * check if ended
+            BEQ     DONE_PRINT          * branch to end
+            ADD.W   #4,D1               * add to num bits that have been shifted
+            JMP     PRINT_LOOP          * jump to beginning
             
 DONE_PRINT  RTS
 
 *========================================
-* Display the number in register D5 in decimal
+* Display the number in register D5 in hex
 *========================================
 DISP_REG    MOVE.B  D5,D1       ; get register
             EXT.L   D1
@@ -220,21 +256,12 @@ DISP_REG    MOVE.B  D5,D1       ; get register
             RTS     
             
 *========================================
-* Display the register number in hex
-*========================================
-DISP_ADDRESS
-            MOVE.L  A5,D5
-            JSR     DISP_REG
-            RTS
-
-*========================================
 * Get bits 9-11
 *========================================     
 GET_911     MOVE.W  D3,D5
             LSL.W   #4,D5
             LSR.W   #8,D5
-            LSR.W   #5,D5
-            
+            LSR.W   #5,D5           
             RTS
             
 *========================================
@@ -245,16 +272,21 @@ GET_07      MOVE.B  D3,D5
             RTS
 
 *========================================
-* Print immediate data value (bits 9-11)
-*========================================   
-DISP_DATA   LEA     DISP_PS,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-            
-            JSR     GET_911
-            JSR     DISP_REG
+* Get bits 3-5
+*========================================  
+GET_35      MOVE.B  D3,D5
+            LSL.B   #2,D5
+            LSR.B   #5,D5
             RTS
-            
+
+*========================================
+* Get bits 0-2
+*========================================  
+GET_02      MOVE.B  D3,D5
+            LSL.B   #5,D5
+            LSR.B   #5,D5
+            RTS
+           
 *========================================
 * Get opmode bits 6-8
 *======================================== 
@@ -302,6 +334,7 @@ SHIFT_02    MOVE.B  D3,D5
             JSR     DISP_REG         
             RTS
             
+
 
 *~Font name~Courier New~
 *~Font size~10~

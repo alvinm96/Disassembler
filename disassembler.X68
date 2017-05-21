@@ -17,29 +17,18 @@
 *   A5: Stores starting memory address
 *   A6: Stores ending memory address
 *===================================================
-* Define constants prior to program execution
-*===================================================
-            OPT     CRE
-S_PTR       EQU     $00100000
-START       EQU     $1000
-CR          EQU     $0D                  * CARRIAGE RETURN
-LF          EQU     $0A                  * LINE FEED
-IO_PROMPT   EQU     $0000A000
-
-*===================================================
-* Define messages
-*===================================================
-MSG_INTRO   DC.B   'Welcome to disassembler',0
-MSG_START   DC.B   'Please enter starting address: ',0
-MSG_END     DC.B   'Please enter ending address: ' ,0
-MSG_BADADR  DC.B   'Address must be a valid hexadecimal number',0
-
+            
+            INCLUDE 'display.X68'
+            INCLUDE 'ea.X68'
+            INCLUDE 'opcodes.X68'
+            
             ORG     START
 *===================================================
 * Program execution - Youngmin 5/5/17
 *===================================================
-            BSR         PROMPT_USR
-            BSR         INPUT
+            JSR         PROMPT_USR
+            JSR         INPUT
+            JSR         LOOP
             MOVEA.L     S_PTR, A7        * INIT STACK
             BSR         RESET
             
@@ -48,15 +37,13 @@ MSG_BADADR  DC.B   'Address must be a valid hexadecimal number',0
 *=================================================
 * Take user input - Youngmin 5/5/17
 *=================================================
-PROMPT_USR    
-            LEA         MSG_INTRO,A1    * DISPLAY PROMPT
+PROMPT_USR  LEA         MSG_INTRO,A1    * DISPLAY PROMPT
             MOVE.B      #13,D0
             TRAP        #15
             MOVE.B      #7,NUM_LINE     * INIT COUNTER
             RTS
 
-INPUT            
-            LEA         MSG_START,A1    * REQUEST STARTING ADDRESS
+INPUT       LEA         MSG_START,A1    * REQUEST STARTING ADDRESS
             MOVE.B      #14,D0
             TRAP        #15    
             
@@ -78,7 +65,7 @@ INPUT
             
             CMP.L       A5,A6           
             BLE         BAD_INPUT       * BRANCH IF ENDING ADDRESS IS LOWER THAN STARTING
-            MOVE.B      #0,-(sp)        * INIT STACK
+            ;MOVE.B      #0,-(sp)        * INIT STACK
             RTS
             
 *===================================================
@@ -192,16 +179,20 @@ RESET
             MOVEA.L     #$0,A3
             MOVEA.L     #$0,A4
             RTS
+
+
+PAUSE_OUT   LEA     MSG_PAUSE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #5,D0
+            TRAP    #15
+            MOVE.B  #0,NUM_LINE
+            JMP     LOOP
     
-*=================================================
-* Variables
-*=================================================
-NUM_LINE    DS.B   1
-START_A     DS.B   1
-END_A       DS.B   1
     
     
-    END    START        ; last line of source
+            END    START        ; last line of source
+
 
 
 

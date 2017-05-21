@@ -2,11 +2,13 @@
 * Display opcodes
 *-------------------------------------------------------
                 OPT     CRE
+START           EQU     $1000
 S_PTR           EQU     $00100000
 CR              EQU     $0D                  * CARRIAGE RETURN
 LF              EQU     $0A                  * LINE FEED
 IO_PROMPT       EQU     $0000A000
 
+MSG_PAUSE       DC.B   'Press enter to continue...',0
 MSG_INTRO       DC.B   'Welcome to disassembler',0
 MSG_START       DC.B   'Please enter starting address: ',0
 MSG_END         DC.B   'Please enter ending address: ' ,0
@@ -67,7 +69,12 @@ REG_5           DC.B    '5',0
 REG_6           DC.B    '6',0  
 REG_7           DC.B    '7',0
 
-TABLE_HEXCHAR   DC.B    '0',0
+SIZE            DS.B    1
+NUM_LINE        DS.B    1
+START_A         DS.B    1
+END_A           DS.B    1
+
+TABLE_HtoA      DC.B    '0',0
                 DC.B    '1',0
                 DC.B    '2',0
                 DC.B    '3',0
@@ -83,6 +90,8 @@ TABLE_HEXCHAR   DC.B    '0',0
                 DC.B    'D',0
                 DC.B    'E',0
                 DC.B    'F',0
+
+
 
 
 
