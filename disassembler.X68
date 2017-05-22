@@ -17,12 +17,12 @@
 *   A5: Stores starting memory address
 *   A6: Stores ending memory address
 *===================================================
-            
             INCLUDE 'display.X68'
             INCLUDE 'ea.X68'
             INCLUDE 'opcodes.X68'
-            
             ORG     START
+            
+
 *===================================================
 * Program execution - Youngmin 5/5/17
 *===================================================
@@ -180,7 +180,6 @@ RESET
             MOVEA.L     #$0,A4
             RTS
 
-
 PAUSE_OUT   LEA     MSG_PAUSE,A1
             MOVE.B  #14,D0
             TRAP    #15
@@ -189,9 +188,8 @@ PAUSE_OUT   LEA     MSG_PAUSE,A1
             MOVE.B  #0,NUM_LINE
             JMP     LOOP
     
-    
-    
             END    START        ; last line of source
+
 
 
 

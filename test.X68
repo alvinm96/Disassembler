@@ -1,138 +1,79 @@
-stack            EQU      $A000
-
-example          EQU      %1101111001100001    * I made up bits 0 to 11      
-
-shift            EQU     12                   * Shift 12 bits 
-
- 
-
-* Program starts here
-
- 
-
-                 ORG     $400
-
-start          LEA     stack,SP        *Load the SP
-
-                 LEA     jmp_table,A0    *Index into the table
-
-                 CLR.L   D0              *Zero it
-
-                 MOVE.W  #example,D0     *We'll play with it here
-
-                 MOVE.B  #shift,D1       *Shift 12 bits to the right  
-
-                 LSR.W   D1,D0           *Move the bits
-
+*****************************
 *
+*
+* Created 2/18/2016
+*
+* Test program
+*
+*****************************
 
-* Consider the next instruction. Why do we have to multiply the index 
 
-* by 6? How many bytes does a single jump table entry require? 
 
- 
+* ORG the program so that it straddles the address boundary $00007FFF to $00008000
 
-               MULU        #6,D0       *Form offset     
+		MOVE.L	START2,$7000
 
-               JSR          0(A0,D0)   *Jump indirect with index
+* NOP and similar instructions. Should clearly differentiate NOP and RTS from others.
 
-                 
-GET_SIZE    MOVE.B  D3,D5       * move instruction for shifting
-            LSR.B   #6,D5       * move size to LSB
-            RTS                          
+START2		NOP			*Required
+		RTS			*Required
+		STOP	#$2000  	* Not required instruction
 
-jmp_table      JMP         code0000
+* This is a group of ADD instructions
 
-               JMP         code0001
+add_start	ADDI.W	#$4000,D0	
+		
+* This is a group of SUB instructions
+subtracts	SUBA.W	(A4),A6
 
-               JMP         code0010
+* Group is random data
 
-               JMP         code0011
+data1		DC.B		$FF,$AA,$45,$0A
 
-               JMP         code0100
+* Move instructions
 
-               JMP         code0101
+moves		MOVE.B	D0,D1
 
-               JMP         code0110
+data5		DC.B	'Here is some interspersed data'
+		
+* Divide and multiple optional instructions
+	
+ands		AND.B	#$01,$4568
 
-               JMP         code0111
+shifts		ASL.B	D0,D0
 
-               JMP         code1000
+rolls		ROL.L	D2,D3
 
-               JMP         code1001
+clear		CLR	D4
 
-               JMP         code1010
+load_addr	LEA	$DC00FF00,A2
 
-               JMP         code1011
+* random data	
+		DC.W	2949,0411,2848,7869
 
-               JMP         code1100
+compares	CMP.B	(A3),D5
 
-               JMP       code1101
+* Branches	
+		
 
-               JMP         code1110
+* Jump and branch instructions
 
-               JMP         code1111
+jmplabel	BCC	compares		
+		BGT	compares		
+		BLE	compares	
+		
+*These are not required instructions
+multiply	MULS	D0,D3
+		DIVU	(A3),D5	*Optional instruction
 
-        
 
- 
 
-*The following subroutines will get filled in as you decode the instructions . For *now, just exit gracefully.
 
- 
 
- 
 
-code0000       STOP        #$2700
 
-code0001       STOP        #$2700
 
-code0010       STOP        #$2700
-
-code0011       STOP        #$2700
-
-code0100       STOP        #$2700
-
-code0101       STOP        #$2700
-
-code0110       STOP        #$2700
-
-code0111       STOP        #$2700
-
-code1000       STOP        #$2700
-
-code1001       STOP        #$2700
-
-code1010       STOP        #$2700
-
- 
-
-* Next we put in the next level of decoding. I just stuck this BRA
-
-* instruction here so it would look different. If this was your real
-
-* code, you would decode to the next level. Perhaps this would be
-
- * another jump table to the 8 possible op-codes at the next level.
-
- 
-
-code1011     BRA        code1011
-
-  
-
-code1100       STOP        #$2700
-
-code1101       STOP        #$2700
-
-code1110       STOP        #$2700
-
-code1111       STOP        #$2700
-
- 
-
-               END   $400 
 *~Font name~Courier New~
 *~Font size~10~
 *~Tab type~1~
-*~Tab size~4~
+*~Tab size~8~
