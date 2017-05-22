@@ -1,12 +1,12 @@
 # Disassembler CSS422 Final Project
 ## Overview
-Scans a section of memory and attempts to convert the memory’s contents to a listing of valid assembly language asdfsdf
+Scans a section of memory and attempts to convert the memory’s contents to a listing of valid assembly language.
 
 ## Supported opcodes
 * NOP
 * MOVE
 * MOVEA
-* MOVEQasdfasdf
+* MOVEQ
 * MOVEM
 * ADD
 * ADDA
