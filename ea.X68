@@ -16,7 +16,7 @@
 GET_SRC     LEA     MODE_TABLE,A2   ; load mode jump table
             JSR     GET_02          ; get register for bits 0-2
             MOVE.B  D5,D6           ; move register value to D6
-            JSR     GET_35          ; jump to store bits 3-5 in D5
+            JSR     GET_35          ; jump to store mode bits 3-5 in D5
             MULU    #6,D5           ; offset mode
             JSR     0(A2,D5)        ; jump to mode
             RTS
@@ -48,58 +48,69 @@ MODE_TABLE  JMP     MODE_000
 *========================================
 * Dn
 *========================================
-MODE_000    LEA     DISP_DN,A1  ; display D
+MODE_000    CMPI.B  #0,D6               ; check if register is greater than 0
+            BLT     INV_REG
+            CMPI.B  #7,D6               ; check if register is less than 7
+            BGT     INV_REG
+            LEA     DISP_DN,A1          ; display D
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; move register value to D1 for printing
-            EXT.L   D1          ; print register value
-            MOVE.B  #3,D0
-            TRAP    #15
+            MOVE.B  D6,D5
+            JSR     DISP_REG
             RTS
             
 *========================================
 * An
 *========================================     
-MODE_001    LEA     DISP_AN,A1  ; display A
+MODE_001    CMPI.B  #0,D6               ; check if register is greater than 0
+            BLT     INV_REG
+            CMPI.B  #7,D6               ; check if register is less than 7
+            BGT     INV_REG
+            LEA     DISP_AN,A1          ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; move register value for printing
-            EXT.L   D1          ; print register value
-            MOVE.B  #3,D0
-            TRAP    #15
+            MOVE.B  D6,D5
+            JSR     DISP_REG
             RTS
 
 *========================================
 * (An)
 *========================================
-MODE_010    LEA     DISP_OP,A1  ; display (
+MODE_010    CMPI.B  #0,D6       ; check if register is greater than 0
+            BLT     INV_REG
+            CMPI.B  #7,D6       ; check if register is less than 7
+            BGT     INV_REG
+            LEA     DISP_OP,A1  ; display (
             MOVE.B  #14,D0
             TRAP    #15
             LEA     DISP_AN,A1  ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; move register value for printing
-            EXT.L   D1          ; print register value
-            MOVE.B  #3,D0
-            TRAP    #15
+            
+            MOVE.B  D6,D5
+            JSR     DISP_REG
+
             LEA     DISP_CP,A1  ; display )
             MOVE.B  #14,D0
             TRAP    #15
+                
             RTS
 
 *========================================
 * (An)+
 *========================================
-MODE_011    LEA     DISP_OP,A1  ; display (
+MODE_011    CMPI.B  #0,D6       ; check if register is greater than 0
+            BLT     INV_REG
+            CMPI.B  #7,D6       ; check if register is less than 7
+            BGT     INV_REG
+            LEA     DISP_OP,A1  ; display (
             MOVE.B  #14,D0
             TRAP    #15
             LEA     DISP_AN,A1  ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; move register value for printing
-            EXT.L   D1          ; print register value
-            MOVE.B  #3,D0
-            TRAP    #15
+            MOVE.B  D6,D5
+            JSR     DISP_REG
             LEA     DISP_CP,A1  ; display )
             MOVE.B  #14,D0
             TRAP    #15
@@ -111,7 +122,11 @@ MODE_011    LEA     DISP_OP,A1  ; display (
 *========================================
 * -(An)
 *========================================
-MODE_100    LEA     DISP_DEC,A1 ; display -
+MODE_100    CMPI.B  #0,D6       ; check if register is greater than 0
+            BLT     INV_REG
+            CMPI.B  #7,D6       ; check if register is less than 7
+            BGT     INV_REG
+            LEA     DISP_DEC,A1 ; display -
             MOVE.B  #14,D0
             TRAP    #15
             LEA     DISP_OP,A1  ; display (
@@ -120,10 +135,8 @@ MODE_100    LEA     DISP_DEC,A1 ; display -
             LEA     DISP_AN,A1  ; display A
             MOVE.B  #14,D0
             TRAP    #15
-            MOVE.B  D6,D1       ; move register value for printing
-            EXT.L   D1          ; print register value
-            MOVE.B  #3,D0
-            TRAP    #15
+            MOVE.B  D6,D5
+            JSR     DISP_REG
             LEA     DISP_CP,A1  ; display )
             MOVE.B  #14,D0
             TRAP    #15
@@ -228,7 +241,7 @@ PRINT_ADDRESS_LOOP
 * Print D5 in hex
 *========================================  
 PRINT_HEX
-            LEA     TABLE_HtoA,A2    * load hex-ascii values
+            LEA     TABLE_HtoA,A2       * load hex-ascii values
             MOVE.B  #12,D2              * starting displacement    
             MOVE.B  #0,D1               * bits that already been shifted            
 
@@ -249,11 +262,12 @@ DONE_PRINT  RTS
 *========================================
 * Display the number in register D5 in hex
 *========================================
-DISP_REG    MOVE.B  D5,D1       ; get register
-            EXT.L   D1
-            MOVE.B  #3,D0
+DISP_REG    LEA     TABLE_HtoA,A2
+            MULU    #2,D5
+            LEA     0(A2,D5),A1
+            MOVE.B  #14,D0
             TRAP    #15
-            RTS     
+            RTS
             
 *========================================
 * Get bits 9-11
@@ -334,6 +348,15 @@ SHIFT_02    MOVE.B  D3,D5
             JSR     DISP_REG         
             RTS
             
+INV_REG     LEA     MSG_INVREG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
+
+
+
+
+
 
 
 *~Font name~Courier New~

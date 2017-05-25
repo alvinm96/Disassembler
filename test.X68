@@ -11,14 +11,14 @@
 
 * ORG the program so that it straddles the address boundary $00007FFF to $00008000
 
-		MOVE.L	START2,$7000
+		ORG $7000
 
 * NOP and similar instructions. Should clearly differentiate NOP and RTS from others.
 
-START2		NOP			*Required
+		NOP			*Required
 		RTS			*Required
 		STOP	#$2000  	* Not required instruction
-
+        BCHG    D3,(A2)
 * This is a group of ADD instructions
 
 add_start	ADDI.W	#$4000,D0	
@@ -65,6 +65,9 @@ jmplabel	BCC	compares
 *These are not required instructions
 multiply	MULS	D0,D3
 		DIVU	(A3),D5	*Optional instruction
+
+
+
 
 
 

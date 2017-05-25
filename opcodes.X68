@@ -12,45 +12,7 @@
 *       -code0000
 *       -code0110
 *       -testing  
-*-------------------------------------------------------
-;example     EQU     %0011110000001011   ; MOVE.W  A3,D6
-;example     EQU     %0100001000000101   ; CLR.B  D5
-;example     EQU     %1000011001000101   ; OR  D5,D3 
-;example     EQU     %0101100100000000   ; SUBQ.B  #4,D0
-;example     EQU     %0111101000000100   ; MOVEQ.L  #4,D5
-;example     EQU     %1000100011010101   ; DIVU.W  (A5),D4
-;example     EQU     %1001001010000000   ; SUB.L  D0,D1
-;example     EQU     %1001100001100010   ; SUB.W  -(A2),D4
-;example     EQU     %1011011010001100   ; CMP.L  A4,D3
-;example     EQU     %1100011000000011   ; AND.B  D3,D3
-;example     EQU     %1100010111011001   ; MULS.W  (A1)+,D2 
-;example     EQU     %1101011001001011   ; ADD.W  A3,D3
-;example     EQU     %1101010111000011   ; ADDA.L  D3,A2
-;example     EQU     %1110011100101101   ; LSL.B  D3,D5
-;example     EQU     %1110011100001101   ; LSL.B  #3,D5
-;example     EQU     %1110011101001101   ; LSL.W  #3,D5
-;example     EQU     %1110000011010001   ; ASR.W  (A1)
-;example     EQU     %1110010001111101   ; ROR.W  D2,D5
-;example     EQU     %0011001001000011   ; MOVEA.W  D3,A1
-;example     EQU     %0011100000111100   ; MOVE.W  #$10FF,D4
-;example     EQU     %0010100000111001   ; MOVE.L  $1000FFFF,D4
-;example     EQU     %0011100000111000   ; MOVE.W  $10FF,D4
-;example     EQU     %0011000111111000   ; MOVE.W  $10FF,$10FF
-;example     EQU     %0010100000111100   ; MOVE.L #$10000000,D4
-;word        EQU     $10000000 ; address test
-
-
-;            ORG     $1000
-;            INCLUDE 'display.X68'            
-;            INCLUDE 'ea.X68'
-            
-;START:      
-            
-*========Loop through instructions here
-;            MOVE.W  #example,$1000  ; testing example TODO: remove when loop implemented
-;            MOVE.L  #word,$1002
-;            MOVE.W  #$1000,A5       ; testing example TODO: remove when loop implemented
-            
+*-------------------------------------------------------        
 LOOP        ADDI.B  #1,NUM_LINE
             CMPI.B  #20,NUM_LINE
             BEQ     PAUSE_OUT
@@ -75,7 +37,18 @@ LOOP        ADDI.B  #1,NUM_LINE
             MOVE.B  #14,D0
             TRAP    #15
             
+            CMPA.L  A5,A6           ; 05-21-2017 check if ending address reached - Youngmin
+            BLT     EXITLOOP        ; 05-21-2017 exit loop if ending address is reached otherwise keep looping
             BRA     LOOP
+
+*=======================================
+* Exit loop when at end address
+*=======================================
+
+EXITLOOP    LEA     MSG_EXIT,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
 
 *========================================
 * Jump table
@@ -97,12 +70,368 @@ JMP_TABLE   JMP     code0000        ; Bit manipulation/Immediate
             JMP     code1110        ; LSd/ASd/ROd
             JMP     code1111        ; Special/Reserved
 
+*========================================
+* 0000 - Bit manipulation/Immediate
+*========================================
+code0000    MOVE.W  D3,D5          ; ADDI, ANDI, BCHG, CMPI, EORI
+            LSL.W   #4,D5
+            LSR.W   #8,D5
+            LSR.W   #4,D5
+            MULU    #6,D5
+            LEA     ZERO_TABLE,A2
+            JSR     0(A2,D5)
+
+            RTS
+            
+*========================================
+* 0000 - Jump Table 
+* ADDI, ANDI, BCHG, CMPI, EORI   
+*========================================       
+ZERO_TABLE  JMP     invcode0000         ;Invalid Instruction
+            JMP     bitmanip0001        ;BCHG D0
+            JMP     bitmanip0010        ;ANDI
+            JMP     bitmanip0011        ;BCHG D1
+            JMP     bitmanip0100        ;SUBI
+            JMP     bitmanip0101        ;BCHG D2
+            JMP     bitmanip0110        ;ADDI
+            JMP     bitmanip0111        ;BCHG D3
+            JMP     bitmanip1000        ;BCHG
+            JMP     bitmanip1001        ;BCHG D4
+            JMP     bitmanip1010        ;EORI
+            JMP     bitmanip1011        ;BCHG D5
+            JMP     bitmanip1100        ;CMPI
+            JMP     bitmanip1101        ;BCHG D6           
+            JMP     invcode1110         ;Invalid Instruction
+            JMP     bitmanip1111        ;BCHG D7
+                      
+*========================================
+* 0000 - Invalid Instructions                   
+*========================================   
+invcode0000         RTS
+
+invcode1110         MOVE.B  #11, D7     ;BAD DATA
+                    RTS                 ;Return bad data
 
 *========================================
-* 0000- Bit manipulation/Immediate
-*========================================
-code0000    RTS
+* 0000 - BCHG              
+*========================================  
+bitmanip0001        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_0,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
 
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+
+*========================================
+* 0000 - ANDI              
+*======================================== 
+bitmanip0010        LEA     DISP_ANDI,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     GET_SIZE
+                    LEA     DISP_TAB,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     GET_SRC
+                    RTS
+
+*========================================
+* 0000 - BCHG              
+*========================================                    
+bitmanip0011        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_1,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+
+*========================================
+* 0000 - SUBI              
+*======================================== 
+bitmanip0100        LEA     DISP_SUBI,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     GET_SIZE
+                    LEA     DISP_TAB,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     MODE_IMM
+                    LEA     DISP_COM,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    SUBA.W  #2,A5
+                    JSR     GET_SRC
+                    RTS    
+
+*========================================
+* 0000 - BCHG              
+*========================================                     
+bitmanip0101        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_2,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+
+*========================================
+* 0000 - ADDI              
+*======================================== 
+bitmanip0110        LEA     DISP_ADDI,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     GET_SIZE
+                    LEA     DISP_TAB,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    
+                    JSR     MODE_IMM
+                    LEA     DISP_COM,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    SUBA.W  #2,A5
+                    JSR     GET_SRC
+                    RTS
+
+*========================================
+* 0000 - BCHG              
+*========================================                     
+bitmanip0111        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_3,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+
+*========================================
+* 0000 - BCHG              
+*======================================== 
+bitmanip1000        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     GET_911
+                    JSR     DISP_REG
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+
+*========================================
+* 0000 - BCHG              
+*======================================== 
+bitmanip1001        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_4,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+
+*========================================
+* 0000 - EORI
+*======================================== 
+bitmanip1010        LEA     DISP_EORI,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     GET_SIZE
+                    LEA     DISP_TAB,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     MODE_IMM
+                    LEA     DISP_COM,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    SUBA.W  #2,A5
+                    JSR     GET_SRC
+                    RTS
+
+*========================================
+* 0000 - BCHG              
+*======================================== 
+bitmanip1011        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_5,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                    
+
+                    RTS
+
+*========================================
+* 0000 - CMPI              
+*========================================
+bitmanip1100        LEA     DISP_CMPI,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     GET_SIZE
+                    LEA     DISP_TAB,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    JSR     MODE_IMM
+                    LEA     DISP_COM,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    SUBA.W  #2,A5
+                    JSR     GET_SRC
+                    RTS
+
+*========================================
+* 0000 - BCHG              
+*======================================== 
+bitmanip1101        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_6,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+
+*========================================
+* 0000 - BCHG              
+*========================================      
+bitmanip1111        LEA     DISP_BCHG,A1        * display MOVE
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    LEA     DISP_TAB,A1         * display tab
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                                
+                    LEA     DISP_DN,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+                    LEA     REG_7,A1
+                    MOVE.B  #14,D0
+                    TRAP    #15
+
+                    LEA     DISP_COM,A1         * display comma
+                    MOVE.B  #14,D0
+                    TRAP    #15
+            
+                    JSR     GET_SRC             * decode dest ea
+                
+                    RTS
+             
 *========================================
 * 0001- MOVE.B
 *========================================
@@ -277,45 +606,12 @@ four0010    LEA     DISP_CLR,A1         * display CLR
             TRAP    #15
             
             JSR     GET_SIZE            * gets size and store in D5
-            CMPI.B  #%00,D5             * byte op
-            BEQ     CLR_B
-            CMPI.B  #%01,D5             * word op
-            BEQ     CLR_W
-            CMPI.B  #%10,D5             * long op
-            BEQ     CLR_L
-
-CLR_B       LEA     DISP_BYTE,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-
             LEA     DISP_TAB,A1         * display tab
             MOVE.B  #14,D0
             TRAP    #15
             
             JSR     GET_SRC             * decode ea
-            RTS            
-
-CLR_W       LEA     DISP_WORD,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-
-            LEA     DISP_TAB,A1         * display tab
-            MOVE.B  #14,D0
-            TRAP    #15
-            
-            JSR     GET_SRC             * decode ea
-            RTS
-            
-CLR_L       LEA     DISP_LONG,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-            
-            LEA     DISP_TAB,A1         * display tab
-            MOVE.B  #14,D0
-            TRAP    #15
-            
-            JSR     GET_SRC             * decode ea
-            RTS  
+            RTS             
    
 *========================================
 * LEA <ea>,A1
@@ -570,7 +866,9 @@ four1101    LEA     DISP_LEA,A1
 *========================================
 four1110    CMPI.W  #$4E75,D3           * RTS
             BEQ     DEC_RTS
-            
+            CMPI.W  #$4E72,D3
+            BEQ     DEC_STOP    
+
             LEA     DISP_JSR,A1         * display JSR
             MOVE.B  #14,D0
             TRAP    #15
@@ -578,7 +876,6 @@ four1110    CMPI.W  #$4E75,D3           * RTS
             LEA     DISP_TAB,A1         * display tab
             MOVE.B  #14,D0
             TRAP    #15
-
             
             JSR     GET_SRC             * decode ea
             RTS
@@ -588,6 +885,16 @@ DEC_RTS     LEA     DISP_RTS,A1         * display RTS
             TRAP    #15
             RTS
             
+DEC_STOP    LEA     DISP_STOP,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+
+            JSR     MODE_IMM
+
+            RTS
 *========================================
 * LEA <ea>,A7
 *========================================
@@ -622,19 +929,6 @@ code0101    LEA     DISP_SUBQ,A1
             MOVE.B  #14,D0
             TRAP    #15
             JSR     GET_SIZE            * get size
-            CMPI.B  #00,D5              * byte
-            BEQ     SUBQ_B
-            CMPI.B  #01,D5              * word
-            BEQ     SUBQ_W
-            CMPI.B  #10,D5              * long
-            BEQ     SUBQ_L        
-            
-            ; TODO: err check
-            RTS
-   
-SUBQ_B      LEA     DISP_BYTE,A1        * display byte
-            MOVE.B  #14,D0
-            TRAP    #15
             
             LEA     DISP_TAB,A1         * display tab
             MOVE.B  #14,D0
@@ -647,39 +941,7 @@ SUBQ_B      LEA     DISP_BYTE,A1        * display byte
             TRAP    #15
             JSR     GET_SRC             * decode ea
             RTS
-           
-SUBQ_W      LEA     DISP_WORD,A1        * display word
-            MOVE.B  #14,D0
-            TRAP    #15
-            
-            LEA     DISP_TAB,A1         * display tab
-            MOVE.B  #14,D0
-            TRAP    #15            
-            
-            JSR     GET_911             * get data
-            JSR     DISP_REG            * print data
-            LEA     DISP_COM,A1         * display comma
-            MOVE.B  #14,D0
-            TRAP    #15
-            JSR     GET_SRC             * decode ea
-            RTS
-            
-SUBQ_L      LEA     DISP_LONG,A1        * display long
-            MOVE.B  #14,D0
-            TRAP    #15
-            
-            LEA     DISP_TAB,A1         * display tab
-            MOVE.B  #14,D0
-            TRAP    #15            
-            
-            JSR     GET_911             * get data
-            JSR     DISP_REG            * print data
-            LEA     DISP_COM,A1         * display comma
-            MOVE.B  #14,D0
-            TRAP    #15
-            JSR     GET_SRC             * decode ea
-            RTS
-            
+          
 *========================================
 * 0110- Bcc <label>
 *========================================
@@ -772,11 +1034,7 @@ DEC_DIVUW   MOVE.B  #1,SIZE             * set SIZE to W
 *========================================
 * 1001- SUB
 *========================================
-code1001    LEA     DISP_SUB,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-
-            JSR     GET_OPMODE      
+code1001    JSR     GET_OPMODE      
             LEA     SUB_TABLE,A1    * load table
             MULU    #6,D5           * offset
             JSR     0(A1,D5)        * jump
@@ -793,7 +1051,10 @@ SUB_TABLE   JMP     SUB000
 *========================================
 * SUB.B  <ea>,Dn
 *========================================
-SUB000      MOVE.B  #0,SIZE         * set SIZE to B  
+SUB000      LEA     DISP_SUB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #0,SIZE         * set SIZE to B  
             LEA     DISP_BYTE,A1    * display byte
             MOVE.B  #14,D0
             TRAP    #15
@@ -815,7 +1076,10 @@ SUB000      MOVE.B  #0,SIZE         * set SIZE to B
 *========================================
 * SUB.W  <ea>,Dn
 *========================================            
-SUB001      MOVE.B  #1,SIZE         * set SIZE to W  
+SUB001      LEA     DISP_SUB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #1,SIZE         * set SIZE to W  
             LEA     DISP_WORD,A1    * display byte
             MOVE.B  #14,D0
             TRAP    #15
@@ -837,7 +1101,10 @@ SUB001      MOVE.B  #1,SIZE         * set SIZE to W
 *========================================
 * SUB.L  <ea>,Dn
 *========================================            
-SUB010      MOVE.B  #2,SIZE         * set SIZE to L
+SUB010      LEA     DISP_SUB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #2,SIZE         * set SIZE to L
             LEA     DISP_LONG,A1    * display byte
             MOVE.B  #14,D0
             TRAP    #15
@@ -857,15 +1124,37 @@ SUB010      MOVE.B  #2,SIZE         * set SIZE to L
             RTS
 
 *========================================
-* Unsupported
+* SUBA.W
 *========================================
-SUB011      ; err
+SUB011      LEA     DISP_SUBA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #1,SIZE         * set SIZE to W
+            LEA     DISP_WORD,A1    * display byte
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1     * display tab
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC         * ea
+            LEA     DISP_COM,A1     * display comma
+            MOVE.B  #14,D0
+            TRAP    #15                
+            LEA     DISP_DN,A1      * display D
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_911         * get register
+            JSR     DISP_REG
             RTS
 
 *========================================
 * SUB.B  Dn,<ea>
 *========================================            
-SUB100      MOVE.B  #0,SIZE         * set SIZE to W  
+SUB100      LEA     DISP_SUB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #0,SIZE         * set SIZE to W  
             LEA     DISP_BYTE,A1    * display byte
             MOVE.B  #14,D0
             TRAP    #15
@@ -887,7 +1176,10 @@ SUB100      MOVE.B  #0,SIZE         * set SIZE to W
 *========================================
 * SUB.W  Dn,<ea>
 *======================================== 
-SUB101      MOVE.B  #1,SIZE         * set SIZE to W  
+SUB101      LEA     DISP_SUB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #1,SIZE         * set SIZE to W  
             LEA     DISP_WORD,A1    * display byte
             MOVE.B  #14,D0
             TRAP    #15
@@ -910,7 +1202,10 @@ SUB101      MOVE.B  #1,SIZE         * set SIZE to W
 *========================================
 * SUB.L  Dn,<ea>
 *======================================== 
-SUB110      MOVE.B  #2,SIZE             * set SIZE to W  
+SUB110      LEA     DISP_SUB,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #2,SIZE             * set SIZE to W  
             LEA     DISP_LONG,A1    * display byte
             MOVE.B  #14,D0
             TRAP    #15
@@ -928,7 +1223,32 @@ SUB110      MOVE.B  #2,SIZE             * set SIZE to W
             TRAP    #15
             JSR     GET_SRC         
             RTS
-   
+
+*========================================
+* SUBA.L
+*======================================== 
+SUB111      LEA     DISP_SUBA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #2,SIZE         * set SIZE to L
+            LEA     DISP_LONG,A1    * display byte
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1     * display tab
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            JSR     GET_SRC         * ea
+            LEA     DISP_COM,A1     * display comma
+            MOVE.B  #14,D0
+            TRAP    #15                
+            LEA     DISP_DN,A1      * display D
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_911         * get register
+            JSR     DISP_REG
+            RTS
+
 *========================================
 * 1010- Unassigned
 *========================================
@@ -1438,7 +1758,7 @@ THI111      LEA     DISP_ADDA,A1        * print ADDA
 *========================================
 * 1110- LSL/LSR/ASR/ASL/ROL/ROR
 *========================================
-code1110    JSR     GET_SIZE            * get bits 6-7
+code1110    JSR     GET_67              * get bits 6-7
             CMPI.B  #%11,D5             * if 11 it is a memory shift
             BEQ     MEM_SHIFT
                                         * register shift
@@ -1692,17 +2012,48 @@ RIGHT       LEA     DISP_R,A1           * print R
 LEFT        LEA     DISP_L,A1           * print L
             MOVE.B  #14,D0
             TRAP    #15
-            RTS      
+            RTS 
             
 *========================================
 * 1111- Special/Reserved
 *========================================
-code1111    RTS
+code1111    JSR     UNS_DATA
+            RTS
 
 *========================================
-* Gets the size from bits 6-7
+* Prints the size from bits 6-7
 *========================================
-GET_SIZE    MOVE.B  D3,D5       * move instruction for shifting
+GET_SIZE    JSR     GET_67
+            CMPI.B  #%00,D5
+            BEQ     IS_BYTE
+            CMPI.B  #%01,D5
+            BEQ     IS_WORD
+            CMPI.B  #%10,D5
+            BEQ     IS_LONG
+            RTS
+            
+IS_BYTE     MOVE.B  #0,SIZE
+            LEA     DISP_BYTE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
+            
+IS_WORD     MOVE.B  #1,SIZE
+            LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
+            
+IS_LONG     MOVE.B  #2,SIZE
+            LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
+
+*========================================
+* Gets bits 6-7
+*========================================
+GET_67      MOVE.B  D3,D5       * move instruction for shifting
             LSR.B   #6,D5       * move size to LSB
             RTS   
 
@@ -1715,15 +2066,12 @@ GET_SIZE_ONE
             LSR.B   #7,D5       * move size to LSB
             RTS
 
+UNS_DATA    LEA     DISP_DATA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            RTS
+
 ;            END     START
-
-
-
-
-
-
-
-
 
 
 
