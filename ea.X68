@@ -161,7 +161,7 @@ MODE_111    CMPI.W  #%000,D6    ; register value 000
             BEQ     MODE_ALA
             CMPI.W  #%100,D6    ; register value 000
             BEQ     MODE_IMM
-            ;TODO: err
+            RTS
                                  
 *========================================
 * Absolute Word Address
@@ -170,10 +170,8 @@ MODE_AWA    CLR     D0
             LEA     DISP_DS,A1      * print $
             MOVE.B  #14,D0
             TRAP    #15        
-            ADDA.W  #2,A5           * move address to read next word                       
-           
-            JSR     PRINT_HEX   
-            
+            ADDA.W  #2,A5           * move address to read next word                                  
+            JSR     PRINT_HEX             
             RTS  
 
 *========================================
@@ -183,12 +181,10 @@ MODE_ALA    CLR     D0
             LEA     DISP_DS,A1      * print $
             MOVE.B  #14,D0
             TRAP    #15
-            ADDA.W  #2,A5           * move address to read next word
-            
+            ADDA.W  #2,A5           * move address to read next word            
             JSR     PRINT_HEX   * print first word
             ADDA.W  #2,A5           * move to next address
-            JSR     PRINT_HEX   * print second half of word
-            
+            JSR     PRINT_HEX   * print second half of word           
             RTS  
 
 *========================================
@@ -199,28 +195,25 @@ MODE_IMM    LEA     DISP_PS,A1      * print #
             TRAP    #15
             LEA     DISP_DS,A1      * print $
             MOVE.B  #14,D0
-            TRAP    #15
-                      
+            TRAP    #15                     
             ADDA.W  #2,A5           * move address to read next word
-            
             MOVE.B  SIZE,D5
             CMPI.B  #1,D5           * byte = 0; word = 1; long = 2
             BGT     IMM_LONG
             
-IMM_WORD    JSR     PRINT_HEX   * print first word   
+IMM_WORD    JSR     PRINT_HEX       * print first word   
             RTS
 
 IMM_LONG    JSR     PRINT_HEX  
             ADDA.W  #2,A5           * move to next address
-            JSR     PRINT_HEX   * print second half of word   
-            RTS
-            
+            JSR     PRINT_HEX       * print second half of word   
+            RTS          
 
 *========================================
 * Print D5 in hex
 *========================================  
 PRINT_ADDRESS
-            LEA     TABLE_HtoA,A2    * load hex-ascii values
+            LEA     TABLE_HtoA,A2       * load hex-ascii values
             MOVE.B  #28,D2              * starting displacement    
             MOVE.B  #0,D1               * bits that already been shifted            
 
@@ -260,7 +253,28 @@ PRINT_LOOP  MOVE.W  (A5),D5             * move instruction
 DONE_PRINT  RTS
 
 *========================================
-* Display the number in register D5 in hex
+* Print D5 in hex
+*========================================  
+PRINT_BYTEHEX
+            LEA     TABLE_HtoA,A2       * load hex-ascii values
+            MOVE.B  #12,D2              * starting displacement    
+            MOVE.B  #8,D1               * bits that already been shifted            
+
+PRINT_BYTE_LOOP  
+            MOVE.W  (A5),D5             * move instruction
+            LSL.W   D1,D5               * remove bits that been shifted
+            LSR.W   D2,D5               * shift to get nibble
+            MULU    #2,D5               * offset for ascii values
+            LEA     0(A2,D5),A1         * print ascii value
+            MOVE.B  #14,D0
+            TRAP    #15
+            CMP.B   D2,D1               * check if ended
+            BEQ     DONE_PRINT          * branch to end
+            ADD.W   #4,D1               * add to num bits that have been shifted
+            JMP     PRINT_BYTE_LOOP     * jump to beginning
+
+*========================================
+* Display the register number in D5 in hex
 *========================================
 DISP_REG    LEA     TABLE_HtoA,A2
             MULU    #2,D5
@@ -282,7 +296,7 @@ GET_911     MOVE.W  D3,D5
 * Get bits 0-7
 *========================================  
 GET_07      MOVE.B  D3,D5
-            JSR     DISP_REG
+            JSR     PRINT_BYTEHEX
             RTS
 
 *========================================

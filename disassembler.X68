@@ -17,7 +17,7 @@
 *   A5: Stores starting memory address
 *   A6: Stores ending memory address
 *===================================================
-            INCLUDE 'test.X68'
+            INCLUDE 'FINALTEST.X68'
             INCLUDE 'display.X68'
             INCLUDE 'ea.X68'
             INCLUDE 'opcodes.X68'
@@ -189,6 +189,8 @@ PAUSE_OUT   LEA     MSG_PAUSE,A1
             JMP     LOOP
     
             END    START        ; last line of source
+
+
 
 
 

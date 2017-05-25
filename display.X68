@@ -45,10 +45,12 @@ DISP_ASd        DC.B    'AS',0
 DISP_ROd        DC.B    'RO',0
 DISP_CMP        DC.B    'CMP',0
 DISP_CMPI       DC.B    'CMPI',0
+DISP_CMPA       DC.B    'CMPA',0
 DISP_JSR        DC.B    'JSR',0
 DISP_RTS        DC.B    'RTS',0
 DISP_SUBQ       DC.B    'SUBQ',0
 DISP_STOP       DC.B    'STOP',0
+DISP_EOR        DC.B    'EOR',0
 DISP_EORI       DC.B    'EORI',0
 DISP_BHI        DC.B    'BHI',0
 DISP_BLS        DC.B    'BLS',0

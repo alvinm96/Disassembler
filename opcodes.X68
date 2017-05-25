@@ -146,8 +146,14 @@ bitmanip0010        LEA     DISP_ANDI,A1
                     JSR     GET_SIZE
                     LEA     DISP_TAB,A1
                     MOVE.B  #14,D0
+                    TRAP    #15                   
+                    JSR     MODE_IMM
+                    LEA     DISP_COM,A1
+                    MOVE.B  #14,D0
                     TRAP    #15
+                    SUBA.W  #2,A5
                     JSR     GET_SRC
+                    ADDA.W  #2,A5
                     RTS
 
 *========================================
@@ -192,6 +198,7 @@ bitmanip0100        LEA     DISP_SUBI,A1
                     TRAP    #15
                     SUBA.W  #2,A5
                     JSR     GET_SRC
+                    ADDA.W  #2,A5
                     RTS    
 
 *========================================
@@ -229,14 +236,14 @@ bitmanip0110        LEA     DISP_ADDI,A1
                     JSR     GET_SIZE
                     LEA     DISP_TAB,A1
                     MOVE.B  #14,D0
-                    TRAP    #15
-                    
+                    TRAP    #15                   
                     JSR     MODE_IMM
                     LEA     DISP_COM,A1
                     MOVE.B  #14,D0
                     TRAP    #15
                     SUBA.W  #2,A5
                     JSR     GET_SRC
+                    ADDA.W  #2,A5
                     RTS
 
 *========================================
@@ -332,6 +339,7 @@ bitmanip1010        LEA     DISP_EORI,A1
                     TRAP    #15
                     SUBA.W  #2,A5
                     JSR     GET_SRC
+                    ADDA.W  #2,A5
                     RTS
 
 *========================================
@@ -377,6 +385,7 @@ bitmanip1100        LEA     DISP_CMPI,A1
                     TRAP    #15
                     SUBA.W  #2,A5
                     JSR     GET_SRC
+                    ADDA.W  #2,A5
                     RTS
 
 *========================================
@@ -933,14 +942,24 @@ code0101    LEA     DISP_SUBQ,A1
             MOVE.B  #14,D0
             TRAP    #15            
             
+            LEA     DISP_PS,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_DS,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             JSR     GET_911             * get data
-            JSR     DISP_REG            * print data
+            CMPI.B  #%000,D5
+            BEQ     ADD_ONE
+CONT_SUBQ   JSR     DISP_REG            * print data
             LEA     DISP_COM,A1         * display comma
             MOVE.B  #14,D0
             TRAP    #15
             JSR     GET_SRC             * decode ea
             RTS
-          
+
+ADD_ONE     ADDI.B  #8,D5
+            JMP     CONT_SUBQ
 *========================================
 * 0110- Bcc <label>
 *========================================
@@ -956,7 +975,8 @@ code0110    MOVE.W  D3,D5
             TRAP    #15
             MOVE.B  D3,D5               * get displacement
             CMPI.B  #%00,D5
-            BEQ     BIT16               * 16 bit displacement              
+            BEQ     BIT16               * 16 bit displacement      
+             
             RTS
 
 BIT16       MOVE.B  #1,SIZE
@@ -1202,6 +1222,7 @@ SUB_TABLE   JMP     SUB000
             JMP     SUB100
             JMP     SUB101
             JMP     SUB110
+            JMP     SUB111
 
 *========================================
 * SUB.B  <ea>,Dn
@@ -1296,7 +1317,7 @@ SUB011      LEA     DISP_SUBA,A1
             LEA     DISP_COM,A1     * display comma
             MOVE.B  #14,D0
             TRAP    #15                
-            LEA     DISP_DN,A1      * display D
+            LEA     DISP_AN,A1      * display D
             MOVE.B  #14,D0
             TRAP    #15
             JSR     GET_911         * get register
@@ -1397,7 +1418,7 @@ SUB111      LEA     DISP_SUBA,A1
             LEA     DISP_COM,A1     * display comma
             MOVE.B  #14,D0
             TRAP    #15                
-            LEA     DISP_DN,A1      * display D
+            LEA     DISP_AN,A1      * display A
             MOVE.B  #14,D0
             TRAP    #15
             JSR     GET_911         * get register
@@ -1411,40 +1432,39 @@ code1010    JSR     UNS_DATA        * err check
             RTS    
 
 *========================================
-* 1011- CMP
+* 1011- CMP/EOR
 *========================================
-code1011    LEA     DISP_CMP,A1
-            MOVE.B  #14,D0
-            TRAP    #15
-            
-            JSR     GET_OPMODE
-            
+code1011    JSR     GET_OPMODE            
             LEA     CMP_TABLE,A2
             MULU    #6,D5           * offset
             JSR     0(A2,D5)        * jump
-            
-            ; not supported, go to err here
-            RTS 
+            RTS                         
 
 *========================================
 * CMP table
 *======================================== 
 CMP_TABLE   JMP     CMP000
             JMP     CMP001
-            JMP     CMP010          
+            JMP     CMP010
+            JMP     CMP011
+            JMP     EOR100
+            JMP     EOR101
+            JMP     EOR110
+            JMP     CMP111       
   
 *========================================
 * 1011 CMP opmodes
 *========================================              
-CMP000      MOVE.B  #0,SIZE             * set SIZE to B  
-            LEA     DISP_BYTE,A1        * print .B
+CMP000      LEA     DISP_CMP,A1
             MOVE.B  #14,D0
             TRAP    #15
-            
+            MOVE.B  #0,SIZE             * set SIZE to B  
+            LEA     DISP_BYTE,A1        * print .B
+            MOVE.B  #14,D0
+            TRAP    #15   
             LEA     DISP_TAB,A1         * print tab
             MOVE.B  #14,D0
             TRAP    #15
-            
             JSR     GET_SRC             * decode ea
             LEA     DISP_COM,A1         * print comma
             MOVE.B  #14,D0
@@ -1453,18 +1473,19 @@ CMP000      MOVE.B  #0,SIZE             * set SIZE to B
             MOVE.B  #14,D0
             TRAP    #15
             JSR     GET_911             * get register
-            JSR     DISP_REG            * print register
+            JSR     DISP_REG            * print register     
             RTS
                                     
-CMP001      MOVE.B  #1,SIZE             * set SIZE to W  
+CMP001      LEA     DISP_CMP,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #1,SIZE             * set SIZE to W  
             LEA     DISP_WORD,A1        * print .W
             MOVE.B  #14,D0
             TRAP    #15
-            
             LEA     DISP_TAB,A1         * print tab
             MOVE.B  #14,D0
             TRAP    #15
-
             JSR     GET_SRC             * decode ea
             LEA     DISP_COM,A1         * print comma
             MOVE.B  #14,D0
@@ -1476,15 +1497,16 @@ CMP001      MOVE.B  #1,SIZE             * set SIZE to W
             JSR     DISP_REG            * print register
             RTS
 
-CMP010      MOVE.B  #2,SIZE             * set SIZE to L  
+CMP010      LEA     DISP_CMP,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #2,SIZE             * set SIZE to L  
             LEA     DISP_LONG,A1        * print .L
             MOVE.B  #14,D0
             TRAP    #15
-            
             LEA     DISP_TAB,A1         * print tab
             MOVE.B  #14,D0
             TRAP    #15
-
             JSR     GET_SRC             * decode ea
             LEA     DISP_COM,A1         * print comma
             MOVE.B  #14,D0
@@ -1495,7 +1517,112 @@ CMP010      MOVE.B  #2,SIZE             * set SIZE to L
             JSR     GET_911             * get register
             JSR     DISP_REG            * print register
             RTS
-               
+
+CMP011      LEA     DISP_CMPA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #1,SIZE             * set SIZE to W  
+            LEA     DISP_WORD,A1        * print .W
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1         * print tab
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_SRC             * decode ea
+            LEA     DISP_COM,A1         * print comma
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_AN,A1          * print D
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_911             * get register
+            JSR     DISP_REG            * print register
+            RTS
+
+EOR100      MOVE.B  #0,SIZE
+            LEA     DISP_EOR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_BYTE,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1         * print tab
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_DN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_911
+            JSR     DISP_REG
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_SRC
+            RTS
+
+EOR101      MOVE.B  #1,SIZE
+            LEA     DISP_EOR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_WORD,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1         * print tab
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_DN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_911
+            JSR     DISP_REG
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_SRC
+            RTS
+
+EOR110      MOVE.B  #2,SIZE
+            LEA     DISP_EOR,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_LONG,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1         * print tab
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_DN,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_911
+            JSR     DISP_REG
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_SRC
+            RTS
+
+CMP111      LEA     DISP_CMPA,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            MOVE.B  #2,SIZE             * set SIZE to L  
+            LEA     DISP_LONG,A1        * print .L
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_TAB,A1         * print tab
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_SRC             * decode ea
+            LEA     DISP_COM,A1         * print comma
+            MOVE.B  #14,D0
+            TRAP    #15
+            LEA     DISP_AN,A1          * print D
+            MOVE.B  #14,D0
+            TRAP    #15
+            JSR     GET_911             * get register
+            JSR     DISP_REG            * print register
+            RTS
+
 *========================================
 * 1100- AND/MULS
 *======================================== 
@@ -1818,7 +1945,8 @@ THI011      MOVE.B  #1,SIZE             * set SIZE to W
 *========================================
 * ADD.B  Dn,<ea>
 *========================================           
-THI100      LEA     DISP_ADD,A1         * print ADD
+THI100      MOVE.B  #0,SIZE
+            LEA     DISP_ADD,A1         * print ADD
             MOVE.B  #14,D0
             TRAP    #15
             LEA     DISP_BYTE,A1        * print B
@@ -1842,7 +1970,8 @@ THI100      LEA     DISP_ADD,A1         * print ADD
 *========================================
 * ADD.W  Dn,<ea>
 *========================================              
-THI101      LEA     DISP_ADD,A1         * print ADD
+THI101      MOVE.B  #1,SIZE
+            LEA     DISP_ADD,A1         * print ADD
             MOVE.B  #14,D0              
             TRAP    #15 
             LEA     DISP_WORD,A1        * print W
@@ -1866,7 +1995,8 @@ THI101      LEA     DISP_ADD,A1         * print ADD
 *========================================
 * ADD.L  Dn,<ea>
 *========================================              
-THI110      LEA     DISP_ADD,A1         * print ADD
+THI110      MOVE.B  #2,SIZE
+            LEA     DISP_ADD,A1         * print ADD
             MOVE.B  #14,D0
             TRAP    #15
             LEA     DISP_LONG,A1        * print L
@@ -1890,7 +2020,8 @@ THI110      LEA     DISP_ADD,A1         * print ADD
 *========================================
 * ADDA.L  <ea>,An
 *========================================              
-THI111      LEA     DISP_ADDA,A1        * print ADDA
+THI111      MOVE.B  #2,SIZE
+            LEA     DISP_ADDA,A1        * print ADDA
             MOVE.B  #14,D0
             TRAP    #15
             LEA     DISP_LONG,A1        * print L
@@ -1899,7 +2030,6 @@ THI111      LEA     DISP_ADDA,A1        * print ADDA
             LEA     DISP_TAB,A1         * print tab
             MOVE.B  #14,D0
             TRAP    #15
-            
             JSR     GET_SRC             * decode ea
             LEA     DISP_COM,A1         * print comma
             MOVE.B  #14,D0
@@ -2227,13 +2357,6 @@ UNS_DATA    LEA     DISP_DATA,A1
             MOVE.B  #14,D0
             TRAP    #15
             RTS
-
-;            END     START
-
-
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~
