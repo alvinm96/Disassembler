@@ -10,7 +10,6 @@
 
 * TODO: -Error handling
 *       -code0000
-*       -code0110
 *       -testing  
 *-------------------------------------------------------        
 LOOP        ADDI.B  #1,NUM_LINE
