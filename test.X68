@@ -19,6 +19,7 @@
 		RTS			*Required
 		STOP	#$2000  	* Not required instruction
         BCHG    D3,(A2)
+		BGT		add_start
 * This is a group of ADD instructions
 
 add_start	ADDI.W	#$4000,D0	
