@@ -14,7 +14,8 @@ MSG_START       DC.B   'Please enter starting address: ',0
 MSG_END         DC.B   'Please enter ending address: ' ,0
 MSG_BADADR      DC.B   'Address must be a valid hexadecimal number',0
 MSG_INVREG      DC.B   'INV REG',0
-MSG_EXIT        DC.B   'EXIT',0
+MSG_CONT        DC.B   'Enter 0 to exit the disassembler, enter 1 to enter a new address: ',0
+MSG_EXIT        DC.B   'EXIT',CR,LF,0
 MSG_TEST
 
 NEW_LINE        DC.B    CR,LF,0
@@ -114,6 +115,8 @@ TABLE_HtoA      DC.B    '0',0
                 DC.B    'D',0
                 DC.B    'E',0
                 DC.B    'F',0
+
+
 
 
 

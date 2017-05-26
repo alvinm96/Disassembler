@@ -12,6 +12,7 @@
 *       -code0000
 *       -testing  
 *-------------------------------------------------------        
+
 LOOP        ADDI.B  #1,NUM_LINE
             CMPI.B  #20,NUM_LINE
             BEQ     PAUSE_OUT
@@ -47,7 +48,27 @@ LOOP        ADDI.B  #1,NUM_LINE
 EXITLOOP    LEA     MSG_EXIT,A1
             MOVE.B  #14,D0
             TRAP    #15
-            RTS
+            
+            *DISPLAY MSG TO PROMPT USER TO CONTINUE OR EXIT DISASSEMBLER
+            LEA     MSG_CONT,A1
+            MOVE.B  #14,D0
+            TRAP    #15
+            
+            *TAKE INPUT
+            MOVE.B  #4,D0
+            TRAP    #15
+            
+            *COMPARE TO 0 FOR EXIT
+            CMP.L   #0,D1
+            BEQ     RETURN
+            
+            *COMPARE TO 1 FOR CONTINUE
+            CMP.L   #1,D1
+            RESET
+            BEQ     START
+
+RETURN      RTS
+
 
 *========================================
 * Jump table
@@ -2357,6 +2378,10 @@ UNS_DATA    LEA     DISP_DATA,A1
             MOVE.B  #14,D0
             TRAP    #15
             RTS
+
+
+
+
 
 *~Font name~Courier New~
 *~Font size~10~
