@@ -12,7 +12,6 @@
 *       -code0000
 *       -testing  
 *-------------------------------------------------------        
-
 LOOP        ADDI.B  #1,NUM_LINE
             CMPI.B  #20,NUM_LINE
             BEQ     PAUSE_OUT
@@ -68,7 +67,6 @@ EXITLOOP    LEA     MSG_EXIT,A1
             BEQ     START
 
 RETURN      RTS
-
 
 *========================================
 * Jump table
@@ -753,8 +751,12 @@ MOVEM_L     LEA     DISP_LONG,A1        * display long
             LEA     DISP_TAB,A1
             MOVE.B  #14,D0
             TRAP    #15
-            
+            JSR     GET_REG_LIST
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             JSR     GET_SRC             * decode ea
+
             RTS            
             
 MOVEM_W     LEA     DISP_WORD,A1        * display word
@@ -764,8 +766,12 @@ MOVEM_W     LEA     DISP_WORD,A1        * display word
             LEA     DISP_TAB,A1
             MOVE.B  #14,D0
             TRAP    #15
-            
+            JSR     GET_REG_LIST
+            LEA     DISP_COM,A1
+            MOVE.B  #14,D0
+            TRAP    #15
             JSR     GET_SRC             * decode ea
+            
             RTS             
    
 *========================================
@@ -2378,10 +2384,6 @@ UNS_DATA    LEA     DISP_DATA,A1
             MOVE.B  #14,D0
             TRAP    #15
             RTS
-
-
-
-
 
 *~Font name~Courier New~
 *~Font size~10~

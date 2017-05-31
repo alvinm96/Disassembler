@@ -367,9 +367,32 @@ INV_REG     LEA     MSG_INVREG,A1
             TRAP    #15
             RTS
 
+GET_REG_LIST
+            ADDA.W  #2,A5           * move to next word
+            MOVE.B  #0,D6           * iterator
+GET_REG_LIST_LOOP
+            CMPI.B  #8,D6           * iterator end
+            BEQ     END_MOVEM
+            MOVE.W  (A5),D5         * move instruction
+            LSR.W   #8,D5           * first half
+            LSL.B   D6,D5           * remove bits
+            LSR.B   #7,D5           * isolate bits
+            CMPI.B  #$1,D5
+            BEQ     CHECK_NEXT_BIT  * hit 1
+            ADDI.B  #1,D6
+            JMP     GET_REG_LIST_LOOP
 
-
-
+CHECK_NEXT_BIT
+            MOVE.W  (A5),D5         * move instruction
+            ADDI.B  #1,D6           * check next bit
+            LSR.W   #8,D5
+            LSL.B   D6,D5
+            LSR.B   #7,D5
+            CMPI.B  #1,D5           * still 1 continue
+            BEQ     CHECK_NEXT_BIT  * keep repeating until not 1
+            ; print
+            JMP     GET_REG_LIST_LOOP
+END_MOVEM
 
 
 
