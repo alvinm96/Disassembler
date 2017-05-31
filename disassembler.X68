@@ -40,12 +40,12 @@
 PROMPT_USR  LEA         MSG_INTRO,A1    * DISPLAY PROMPT
             MOVE.B      #13,D0
             TRAP        #15
-            MOVE.B      #7,NUM_LINE     * INIT COUNTER
             RTS
 
-INPUT       LEA         MSG_START,A1    * REQUEST STARTING ADDRESS
+INPUT       ADDI.B      #4,NUM_LINE     * INIT COUNTER
+            LEA         MSG_START,A1    * REQUEST STARTING ADDRESS
             MOVE.B      #14,D0
-            TRAP        #15    
+            TRAP        #15      
             
             LEA         IO_PROMPT,A1    * TAKE STARTING ADDRESS STORE IN A5
             MOVE.B      #2,D0           
@@ -189,6 +189,7 @@ PAUSE_OUT   LEA     MSG_PAUSE,A1
             JMP     LOOP
     
             END    START        ; last line of source
+
 
 
 

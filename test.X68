@@ -93,7 +93,10 @@
 		CLR.B		-(A7)
 		CLR.W		$1000
 		CLR.L		$87654321
-
+    	MOVEM.W     D1-D3/A0,(A0)
+    	MOVEM.L     D1-D3/A1,(A6)
+		MOVEM.L     D0/A0, $1111
+    	MOVEM.W     D7/A7, $1111
 *========================================
 * code0101 tests
 *========================================
@@ -237,7 +240,7 @@ BRANCH_TEST
 		LSL.W		$1234
 		LSR.W		$1234			
 
-
+		STOP		#$2700
 
 *~Font name~Courier New~
 *~Font size~10~

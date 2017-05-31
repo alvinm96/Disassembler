@@ -13,7 +13,7 @@
 *       -testing  
 *-------------------------------------------------------        
 LOOP        ADDI.B  #1,NUM_LINE
-            CMPI.B  #20,NUM_LINE
+            CMPI.B  #32,NUM_LINE
             BEQ     PAUSE_OUT
             
             MOVE.W  (A5),D3         ; read instruction from mem and move to register
@@ -753,7 +753,7 @@ MOVEM_L     LEA     DISP_LONG,A1        * display long
             LEA     DISP_TAB,A1
             MOVE.B  #14,D0
             TRAP    #15
-            JSR     GET_REG_LIST
+            ;JSR     GET_REG_LIST
             LEA     DISP_COM,A1
             MOVE.B  #14,D0
             TRAP    #15
@@ -768,7 +768,7 @@ MOVEM_W     LEA     DISP_WORD,A1        * display word
             LEA     DISP_TAB,A1
             MOVE.B  #14,D0
             TRAP    #15
-            JSR     GET_REG_LIST
+            ;JSR     GET_REG_LIST
             LEA     DISP_COM,A1
             MOVE.B  #14,D0
             TRAP    #15
