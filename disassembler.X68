@@ -21,6 +21,7 @@
             INCLUDE 'display.X68'
             INCLUDE 'ea.X68'
             INCLUDE 'opcodes.X68'
+
             ORG     START
             
 *===================================================
@@ -189,6 +190,7 @@ PAUSE_OUT   LEA     MSG_PAUSE,A1
             JMP     LOOP
     
             END    START        ; last line of source
+
 
 
 

@@ -63,7 +63,7 @@ EXITLOOP    LEA     MSG_EXIT,A1
             
             *COMPARE TO 1 FOR CONTINUE
             CMP.L   #1,D1
-            RESET
+            JSR     RESET
             BEQ     START
 
 RETURN      RTS
