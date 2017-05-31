@@ -596,7 +596,8 @@ FOUR_TABLE
 *========================================
 * Not used
 *========================================
-four0000    RTS
+four0000    JSR     UNS_DATA
+            RTS
 
 *========================================
 * LEA <ea>,A0
@@ -702,7 +703,8 @@ four0101    LEA     DISP_LEA,A1         * display LEA
 *========================================
 * Not used
 *========================================
-four0110    RTS
+four0110    JSR     UNS_DATA
+            RTS
 
 *========================================
 * LEA <ea>,A3
@@ -804,7 +806,8 @@ four1001    LEA     DISP_LEA,A1         * display LEA
 *========================================
 * Not used
 *========================================
-four1010    RTS
+four1010    JSR     UNS_DATA
+            RTS
 
 *========================================
 * LEA <ea>,A5
@@ -976,17 +979,12 @@ code0101    LEA     DISP_SUBQ,A1
             MOVE.B  #14,D0
             TRAP    #15
             JSR     GET_911             * get data
-            CMPI.B  #%000,D5
-            BEQ     ADD_ONE
-CONT_SUBQ   JSR     DISP_REG            * print data
+            JSR     DISP_REG            * print data
             LEA     DISP_COM,A1         * display comma
             MOVE.B  #14,D0
             TRAP    #15
             JSR     GET_SRC             * decode ea
             RTS
-
-ADD_ONE     ADDI.B  #8,D5
-            JMP     CONT_SUBQ
 *========================================
 * 0110- Bcc <label>
 *========================================
